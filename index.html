@@ -1,0 +1,59 @@
+function doGet(e) {
+  return handleRequest(e);
+}
+
+function doPost(e) {
+  return handleRequest(e);
+}
+
+function handleRequest(e) {
+  const lock = LockService.getScriptLock();
+  lock.tryLock(10000);
+  
+  try {
+    const ss = SpreadsheetApp.openById(getOrCreateSheet());
+    const aba = e.parameter.aba || 'pendencias';
+    const sheet = ss.getSheetByName(aba);
+    const method = e.parameter.method || 'GET';
+    
+    if (method === 'GET') {
+      const data = sheet.getDataRange().getValues();
+      return json({data: data});
+    }
+    
+    if (method === 'SET') {
+      const payload = JSON.parse(e.parameter.payload);
+      sheet.clearContents();
+      sheet.getRange(1, 1, payload.length, payload[0].length).setValues(payload);
+      return json({ok: true});
+    }
+    
+  } catch(err) {
+    return json({error: err.toString()});
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function getOrCreateSheet() {
+  const key = 'SHEET_ID';
+  const props = PropertiesService.getScriptProperties();
+  let id = props.getProperty(key);
+  
+  if (!id) {
+    const ss = SpreadsheetApp.create('Painel de Obra — Z25/07');
+    ['pendencias','frentes','cobrar'].forEach(nome => {
+      ss.insertSheet(nome);
+    });
+    ss.deleteSheet(ss.getSheets()[0]);
+    id = ss.getId();
+    props.setProperty(key, id);
+  }
+  return id;
+}
+
+function json(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
