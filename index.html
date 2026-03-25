@@ -761,7 +761,7 @@ function renderTabela(){
           <span class="badge ${pClass(p.prior)}">${p.prior}</span>
         </div>
         <div class="m-card-obs">${p.obs}</div>
-        ${p.prazo?`<div style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:6px">Prazo: <input type="date" value="${p.prazo}" onchange="editPend('${p.id}','prazo',this.value)" style="border:0.5px solid var(--border);border-radius:6px;padding:2px 6px;font-family:var(--mono);font-size:11px;background:var(--surface);color:var(--text)"></div>`:''}
+        ${p.prazo?`<div style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:6px">Prazo: <input type="date" value="${p.prazo||''}" onchange="salvarPrazo('${p.id}',this.value)" style="border:0.5px solid var(--border);border-radius:6px;padding:2px 6px;font-family:var(--mono);font-size:11px;background:var(--surface);color:var(--text)"></div>`:''}
         <div class="m-card-footer">
           <select class="m-status-sel badge ${sClass(p.status)}" onchange="editPend('${p.id}','status',this.value);this.className='m-status-sel badge '+sClass(this.value)">
             ${['Urgente','Em andamento','Aguardando','Não iniciado','Concluído'].map(s=>`<option ${s===p.status?'selected':''}>`+s+`</option>`).join('')}
@@ -782,7 +782,7 @@ function renderTabela(){
         </select>
       </td>
       <td class="col-prior" data-label="Prioridade"><span class="badge ${pClass(p.prior)}">${p.prior}</span></td>
-      <td class="col-prazo" data-label="Prazo"><input type="date" value="${p.prazo||''}" onchange="editPend('${p.id}','prazo',this.value)" style="border:0.5px solid var(--border);border-radius:6px;padding:2px 4px;font-family:var(--mono);font-size:10px;background:var(--surface);color:var(--text);width:100%;min-width:0"></td>
+      <td class="col-prazo" data-label="Prazo"><input type="date" value="${p.prazo||''}" onchange="salvarPrazo('${p.id}',this.value)" style="border:0.5px solid var(--border);border-radius:6px;padding:2px 4px;font-family:var(--mono);font-size:10px;background:var(--surface);color:var(--text);width:100%;min-width:0"></td>
       <td class="col-obs" data-label="Observação"><span contenteditable="true" onblur="editPend('${p.id}','obs',this.innerText.trim())" style="color:var(--muted);font-size:11px;line-height:1.4">${p.obs}</span></td>
       <td class="col-act"><button class="btn-del" onclick="deletarPend('${p.id}')">Excluir</button></td>
     </tr>
@@ -832,6 +832,18 @@ function renderCobrar(){
   `).join('');
 }
 
+function salvarPrazo(id,val){
+  const p=dados.pendencias.find(x=>String(x.id)===String(id));
+  if(p){
+    p.prazo=val;
+    setSyncStatus('saving','salvando...');
+    clearTimeout(saveTimeout);
+    saveTimeout=setTimeout(async()=>{
+      try{await salvarAba('pendencias',dados.pendencias);setSyncStatus('ok','sincronizado');toast('Prazo salvo')}
+      catch(e){setSyncStatus('error','erro ao salvar')}
+    },800);
+  }
+}
 function editPend(id,campo,val){const p=dados.pendencias.find(x=>String(x.id)===String(id));if(p){p[campo]=val;agendarSalvamento('pendencias');atualizarMetricas()}}
 function editFrente(id,campo,val){const f=dados.frentes.find(x=>String(x.id)===String(id));if(f){f[campo]=val;agendarSalvamento('frentes')}}
 function editCobrar(id,campo,val){const c=dados.cobrar.find(x=>String(x.id)===String(id));if(c){c[campo]=val;agendarSalvamento('cobrar')}}
