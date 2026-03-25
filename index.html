@@ -465,6 +465,7 @@
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
           Nova frente
         </button>
+        <button class="btn-sec" onclick="sortFrentes()" id="btn-sort-frentes">% Crescente ↑</button>
         <button class="btn-sec" onclick="carregarTudo()">↺ Atualizar</button>
       </div>
       <div class="frente-grid" id="frente-grid"></div>
@@ -910,8 +911,18 @@ function renderTabela(){
   `).join('');
 }
 
+let frenteSort=null;
+function sortFrentes(){
+  if(frenteSort===null){frenteSort='asc';document.getElementById('btn-sort-frentes').textContent='% Crescente ↑';}
+  else if(frenteSort==='asc'){frenteSort='desc';document.getElementById('btn-sort-frentes').textContent='% Decrescente ↓';}
+  else{frenteSort=null;document.getElementById('btn-sort-frentes').textContent='% Crescente ↑';}
+  renderFrentes();
+}
 function renderFrentes(){
-  document.getElementById('frente-grid').innerHTML=dados.frentes.map(f=>`
+  let frentesOrdenadas=[...dados.frentes];
+  if(frenteSort==='asc')frentesOrdenadas.sort((a,b)=>Number(a.pct)-Number(b.pct));
+  else if(frenteSort==='desc')frentesOrdenadas.sort((a,b)=>Number(b.pct)-Number(a.pct));
+  document.getElementById('frente-grid').innerHTML=frentesOrdenadas.map(f=>`
     <div class="frente-card">
       <div>
         <div class="frente-name" contenteditable="true" onblur="editFrente('${f.id}','nome',this.innerText.trim())">${f.nome}</div>
@@ -939,7 +950,7 @@ function renderCobrar(){
         <div class="cobrar-card ${String(c.done)==='true'?'done':''}">
           <div>
             <div class="cobrar-title" contenteditable="true" onblur="editCobrar('${c.id}','titulo',this.innerText.trim())">${c.titulo}</div>
-            <div class="cobrar-para">Para: ${c.para}</div>
+            <div class="cobrar-para">Para: <select style="border:none;background:transparent;font-family:var(--sans);font-size:12px;color:var(--muted);cursor:pointer" onchange="editCobrar('${c.id}','para',this.value);renderCobrar()">${['Civil','Elétrica','Hidráulica','Marcenaria','Carpintaria','Porta','Caixilhos','Steel','ZAIT','Arquitetura','Fornecedor','Cliente'].map(r=>`<option ${r===c.para?'selected':''}>` +r+`</option>`).join('')}</select></div>
             <div class="cobrar-desc" contenteditable="true" onblur="editCobrar('${c.id}','desc',this.innerText.trim())">${c.desc}</div>
           </div>
           <div class="cobrar-actions">
