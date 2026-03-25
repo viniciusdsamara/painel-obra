@@ -280,6 +280,11 @@
     .cobrar-card { grid-template-columns: 1fr; gap: 8px; }
     .cobrar-actions { flex-direction: row; flex-wrap: wrap; align-items: center; }
   }
+
+  .col-prazo{width:10%}
+  .prazo-vencido{color:var(--red);font-weight:500}
+  .prazo-hoje{color:var(--amber);font-weight:500}
+  .prazo-ok{color:var(--green)}
 </style>
 </head>
 <body>
@@ -377,6 +382,7 @@
             <th class="col-resp">Responsável</th>
             <th class="col-status">Status</th>
             <th class="col-prior">Prior.</th>
+            <th class="col-prazo">Prazo</th>
             <th class="col-obs">Observação</th>
             <th class="col-act">Ação</th>
           </tr></thead>
@@ -498,9 +504,13 @@
         </select>
       </div>
     </div>
-    <div class="form-row" style="margin-top:14px">
-      <label class="form-label">Observação</label>
-      <textarea class="form-textarea" id="f-obs" placeholder="Detalhe ou contexto..."></textarea>
+    <div class="form-row-2" style="margin-top:14px">
+      <div><label class="form-label">Prazo</label>
+        <input class="form-input" id="f-prazo" type="date">
+      </div>
+      <div><label class="form-label">Observação</label>
+        <textarea class="form-textarea" id="f-obs" placeholder="Detalhe ou contexto..." style="min-height:40px"></textarea>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="fecharModal('modal-pend')">Cancelar</button>
@@ -577,25 +587,34 @@
 </div>
 
 <script>
+function prazoClass(d){
+  if(!d)return'';
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const prazo=new Date(d+'T00:00:00');
+  const diff=Math.round((prazo-hoje)/(1000*60*60*24));
+  if(diff<0)return'prazo-vencido';
+  if(diff===0)return'prazo-hoje';
+  return'prazo-ok';
+}
 const API='https://script.google.com/macros/s/AKfycbx_MnRnJIX7ViL0g5KnSjhdI2dKBEW8PeMiKb4x0MyRMg5XKq9AbFPA5cyFp_Ew5QFfNg/exec';
-const HEADERS={pendencias:['id','desc','amb','resp','status','prior','obs'],frentes:['id','nome','status','resp','pct'],cobrar:['id','titulo','para','urg','desc','done']};
+const HEADERS={pendencias:['id','desc','amb','resp','status','prior','prazo','obs'],frentes:['id','nome','status','resp','pct'],cobrar:['id','titulo','para','urg','desc','done']};
 const INICIAL={
   pendencias:[
     ['id','desc','amb','resp','status','prior','obs'],
-    [1,'Fechamento do entreforro — contenção do A/C com placa cimentícia','Suíte casal','Arquitetura','Urgente','Alta','Aguarda aprovação ARQ. Bloqueia forro.'],
-    [2,'Rasgo na manta reflexiva do telhado — risco de condensação','Cobertura / telhado','Civil','Urgente','Alta','Identificado nas fotos. Reparar antes de fechar o forro.'],
-    [3,'Passagem dos cabos elétricos e rede antes do fechamento','Suíte casal','Elétrica','Em andamento','Alta','Bloqueia acabamento e forro.'],
-    [4,'Executar mureta da ilha para medição das pedras e soleiras','Varanda gourmet','Civil','Urgente','Alta','Bloqueia marmoraria e definição de soleiras.'],
-    [5,'Cobrar projeto da bancada e ilha junto à marcenaria','Varanda gourmet','Arquitetura','Aguardando','Alta','Bloqueia orçamento da madeira com carpinteiro.'],
-    [6,'Orçar madeira das portas e prateleira com carpinteiro','Varanda gourmet','Carpintaria','Aguardando','Média','Depende do projeto da marcenaria.'],
-    [7,'Impermeabilização antes do teste de pressão dos chuveiros','Banho casal','Hidráulica','Urgente','Alta','Bloqueia teste hidráulico.'],
-    [8,'Selagem do shaft elétrico ao fechar parede','Banho casal','Elétrica','Aguardando','Média','Verificar exigência no projeto elétrico.'],
-    [9,'Hidráulicas enterradas — janela única com saída dos andaimes','Área externa / jardim','Hidráulica','Urgente','Alta','Prioridade máxima. Não tem segunda janela.'],
-    [10,'Revestimento de tijolos na fachada','Fachada','Civil','Não iniciado','Média','Pode iniciar em paralelo.'],
-    [11,'Instalação do petit pavê e caco de Goiás verde','Área externa / jardim','Civil','Aguardando','Média','Aguarda liberação da área externa.'],
-    [12,'Fechar contrato do paisagismo','Área externa / jardim','Fornecedor','Aguardando','Média','Orçamentos em análise. Bloqueia iluminação externa.'],
-    [13,'Orçar iluminação externa do paisagismo','Área externa / jardim','Fornecedor','Aguardando','Média','Depende do fechamento do paisagismo.'],
-    [14,'Relação de módulos elétricos — cotar e comprar','Geral / toda a obra','Elétrica','Em andamento','Baixa','Contagem feita. Partir para cotação.'],
+    [1,'Fechamento do entreforro — contenção do A/C com placa cimentícia','Suíte casal','Arquitetura','Urgente','Alta','Aguarda aprovação ARQ. Bloqueia forro.',''],
+    [2,'Rasgo na manta reflexiva do telhado — risco de condensação','Cobertura / telhado','Civil','Urgente','Alta','Identificado nas fotos. Reparar antes de fechar o forro.',''],
+    [3,'Passagem dos cabos elétricos e rede antes do fechamento','Suíte casal','Elétrica','Em andamento','Alta','Bloqueia acabamento e forro.',''],
+    [4,'Executar mureta da ilha para medição das pedras e soleiras','Varanda gourmet','Civil','Urgente','Alta','Bloqueia marmoraria e definição de soleiras.',''],
+    [5,'Cobrar projeto da bancada e ilha junto à marcenaria','Varanda gourmet','Arquitetura','Aguardando','Alta','Bloqueia orçamento da madeira com carpinteiro.',''],
+    [6,'Orçar madeira das portas e prateleira com carpinteiro','Varanda gourmet','Carpintaria','Aguardando','Média','Depende do projeto da marcenaria.',''],
+    [7,'Impermeabilização antes do teste de pressão dos chuveiros','Banho casal','Hidráulica','Urgente','Alta','Bloqueia teste hidráulico.',''],
+    [8,'Selagem do shaft elétrico ao fechar parede','Banho casal','Elétrica','Aguardando','Média','Verificar exigência no projeto elétrico.',''],
+    [9,'Hidráulicas enterradas — janela única com saída dos andaimes','Área externa / jardim','Hidráulica','Urgente','Alta','Prioridade máxima. Não tem segunda janela.',''],
+    [10,'Revestimento de tijolos na fachada','Fachada','Civil','Não iniciado','Média','Pode iniciar em paralelo.',''],
+    [11,'Instalação do petit pavê e caco de Goiás verde','Área externa / jardim','Civil','Aguardando','Média','Aguarda liberação da área externa.',''],
+    [12,'Fechar contrato do paisagismo','Área externa / jardim','Fornecedor','Aguardando','Média','Orçamentos em análise. Bloqueia iluminação externa.',''],
+    [13,'Orçar iluminação externa do paisagismo','Área externa / jardim','Fornecedor','Aguardando','Média','Depende do fechamento do paisagismo.',''],
+    [14,'Relação de módulos elétricos — cotar e comprar','Geral / toda a obra','Elétrica','Em andamento','Baixa','Contagem feita. Partir para cotação.',''],
   ],
   frentes:[
     ['id','nome','status','resp','pct'],
@@ -808,9 +827,9 @@ function novoId(lista){return lista.length?Math.max(...lista.map(x=>Number(x.id)
 async function salvarPendencia(){
   const desc=document.getElementById('f-desc').value.trim();
   if(!desc)return;
-  dados.pendencias.unshift({id:novoId(dados.pendencias),desc,amb:document.getElementById('f-amb').value,resp:document.getElementById('f-resp').value,status:document.getElementById('f-status').value,prior:document.getElementById('f-prior').value,obs:document.getElementById('f-obs').value.trim()});
+  dados.pendencias.unshift({id:novoId(dados.pendencias),desc,amb:document.getElementById('f-amb').value,resp:document.getElementById('f-resp').value,status:document.getElementById('f-status').value,prior:document.getElementById('f-prior').value,prazo:document.getElementById('f-prazo').value,obs:document.getElementById('f-obs').value.trim()});
   agendarSalvamento('pendencias');renderTabela();atualizarMetricas();fecharModal('modal-pend');
-  document.getElementById('f-desc').value='';document.getElementById('f-obs').value='';
+  document.getElementById('f-desc').value='';document.getElementById('f-prazo').value='';document.getElementById('f-obs').value='';
 }
 async function salvarFrente(){
   const nome=document.getElementById('ff-nome').value.trim();
