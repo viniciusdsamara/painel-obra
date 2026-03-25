@@ -285,6 +285,12 @@
   .prazo-vencido{color:var(--red);font-weight:500}
   .prazo-hoje{color:var(--amber);font-weight:500}
   .prazo-ok{color:var(--green)}
+
+  .sort-btn{background:none;border:none;cursor:pointer;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);padding:0;display:inline-flex;align-items:center;gap:4px;font-family:var(--sans)}
+  .sort-btn:hover{color:var(--text)}
+  .sort-btn.asc{color:var(--text)}.sort-btn.asc .sort-icon::after{content:'↑'}
+  .sort-btn.desc{color:var(--text)}.sort-btn.desc .sort-icon::after{content:'↓'}
+  .sort-btn .sort-icon::after{content:'↕';opacity:0.4}
 </style>
 </head>
 <body>
@@ -381,8 +387,8 @@
             <th class="col-amb">Ambiente</th>
             <th class="col-resp">Responsável</th>
             <th class="col-status">Status</th>
-            <th class="col-prior">Prior.</th>
-            <th class="col-prazo">Prazo</th>
+            <th class="col-prior"><button class="sort-btn" id="sort-prior" onclick="toggleSort('prior')">Prior.<span class="sort-icon"></span></button></th>
+            <th class="col-prazo"><button class="sort-btn" id="sort-prazo" onclick="toggleSort('prazo')">Prazo<span class="sort-icon"></span></button></th>
             <th class="col-obs">Observação</th>
             <th class="col-act">Ação</th>
           </tr></thead>
@@ -700,6 +706,40 @@ function atualizarMetricas(){
 
 function sClass(s){if(s==='Urgente'||s==='Bloqueado')return'badge-danger';if(s==='Em andamento'||s==='Esta semana')return'badge-warn';if(s==='Concluído')return'badge-ok';if(s==='Contratado')return'badge-info';return'badge-neutral'}
 function pClass(p){if(p==='Alta')return'badge-danger';if(p==='Média')return'badge-warn';return'badge-neutral'}
+
+let sortField=null;
+let sortDir=null;
+const PRIOR_ORDER={'Alta':1,'Média':2,'Baixa':3};
+
+function toggleSort(field){
+  if(sortField!==field){sortField=field;sortDir='asc'}
+  else if(sortDir==='asc'){sortDir='desc'}
+  else{sortField=null;sortDir=null}
+  document.querySelectorAll('.sort-btn').forEach(b=>b.className='sort-btn');
+  if(sortField){
+    const btn=document.getElementById('sort-'+sortField);
+    if(btn)btn.className='sort-btn '+sortDir;
+  }
+  renderTabela();
+}
+
+function applySorting(items){
+  if(!sortField||!sortDir)return items;
+  return [...items].sort((a,b)=>{
+    let va,vb;
+    if(sortField==='prazo'){
+      va=a.prazo||'9999-99-99';
+      vb=b.prazo||'9999-99-99';
+      return sortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
+    }
+    if(sortField==='prior'){
+      va=PRIOR_ORDER[a.prior]||99;
+      vb=PRIOR_ORDER[b.prior]||99;
+      return sortDir==='asc'?va-vb:vb-va;
+    }
+    return 0;
+  });
+}
 
 function renderTabela(){
   const items=dados.pendencias.filter(p=>{
