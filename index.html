@@ -443,7 +443,7 @@
             <th class="col-desc">Descrição</th>
             <th class="col-amb">Ambiente</th>
             <th class="col-resp">Responsável</th>
-            <th class="col-status">Status</th>
+            <th class="col-status" onclick="toggleSort('status')" style="cursor:pointer;user-select:none"><span class="sort-btn" id="sort-status">Status<span class="sort-icon"></span></span></th>
             <th class="col-prior" onclick="toggleSort('prior')" style="cursor:pointer;user-select:none"><span class="sort-btn" id="sort-prior">Prior.<span class="sort-icon"></span></span></th>
             <th class="col-prazo" onclick="toggleSort('prazo')" style="cursor:pointer;user-select:none"><span class="sort-btn" id="sort-prazo">Prazo<span class="sort-icon"></span></span></th>
             <th class="col-obs">Observação</th>
@@ -847,6 +847,38 @@ function applySorting(items){
     }
     return 0;
   });
+}
+
+function editPend(id,campo,val){
+  const p=dados.pendencias.find(x=>String(x.id)===String(id));
+  if(!p)return;
+  p[campo]=val;
+  if(campo==='status'&&val==='Concluído'){p.prior='Zero';}
+  p.alteradoPor=usuarioAtual||'—';
+  agendarSalvamento('pendencias');
+  atualizarMetricas();
+  renderTabela();
+}
+
+let prazoTimeout=null;
+function salvarPrazo(id,val){
+  const p=dados.pendencias.find(x=>String(x.id)===String(id));
+  if(!p){toast('Erro: pendência não encontrada');return;}
+  p.prazo=val;
+  toast('Salvando prazo...');
+  setSyncStatus('saving','salvando...');
+  clearTimeout(prazoTimeout);
+  prazoTimeout=setTimeout(async()=>{
+    try{
+      const rows=objsToRows(dados.pendencias,HEADERS['pendencias']);
+      await api('pendencias','SET',rows);
+      setSyncStatus('ok','sincronizado');
+      toast('Prazo salvo com sucesso');
+    }catch(e){
+      setSyncStatus('error','erro ao salvar');
+      toast('Erro: '+e.message);
+    }
+  },400);
 }
 
 function renderTabela(){
