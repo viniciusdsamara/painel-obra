@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -19,114 +20,160 @@
   body{background:var(--bg);font-family:var(--sans);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh}
   .app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
 
-  .sidebar{background:var(--text);color:#F5F3EE;padding:28px 0;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
-  .sidebar-brand{padding:0 22px 20px;border-bottom:0.5px solid #333;margin-bottom:20px}
-  .sidebar-brand img{width:68px;filter:invert(1);display:block;margin-bottom:14px}
-  .sidebar-label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#9A9890;margin-bottom:4px}
-  .sidebar-obra{font-size:15px;font-weight:600;color:#F5F3EE;line-height:1.3}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 22px;cursor:pointer;font-size:13px;color:#9A9890;border-left:2px solid transparent;transition:all 0.15s}
-  .nav-item:hover{color:#F5F3EE;background:rgba(255,255,255,0.05)}
-  .nav-item.active{color:#F5F3EE;border-left-color:#F5F3EE;background:rgba(255,255,255,0.08)}
-  .nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
-  .nav-count{margin-left:auto;font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.1);padding:1px 7px;border-radius:20px}
-  .nav-count.urgent{background:var(--red);color:white}
-  .sidebar-section{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#555;padding:16px 22px 6px}
-  .sync-status{font-family:var(--mono);font-size:11px;padding:16px 22px 0;margin-top:auto;border-top:0.5px solid #333}
-  .sync-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;background:#555}
-  .sync-dot.ok{background:#2D6A4F}.sync-dot.saving{background:#B7770D}.sync-dot.error{background:#C0392B}
-  .sync-text{color:#9A9890}
+.sidebar{background:var(–text);color:#F5F3EE;padding:28px 0;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
+.sidebar-brand{padding:0 22px 20px;border-bottom:0.5px solid #333;margin-bottom:20px}
+.sidebar-brand img{width:68px;filter:invert(1);display:block;margin-bottom:14px}
+.sidebar-label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#9A9890;margin-bottom:4px}
+.sidebar-obra{font-size:15px;font-weight:600;color:#F5F3EE;line-height:1.3}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 22px;cursor:pointer;font-size:13px;color:#9A9890;border-left:2px solid transparent;transition:all 0.15s}
+.nav-item:hover{color:#F5F3EE;background:rgba(255,255,255,0.05)}
+.nav-item.active{color:#F5F3EE;border-left-color:#F5F3EE;background:rgba(255,255,255,0.08)}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.nav-count{margin-left:auto;font-family:var(–mono);font-size:11px;background:rgba(255,255,255,0.1);padding:1px 7px;border-radius:20px}
+.nav-count.urgent{background:var(–red);color:white}
+.sidebar-section{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#555;padding:16px 22px 6px}
+.sync-status{font-family:var(–mono);font-size:11px;padding:16px 22px 0;margin-top:auto;border-top:0.5px solid #333}
+.sync-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;background:#555}
+.sync-dot.ok{background:#2D6A4F}.sync-dot.saving{background:#B7770D}.sync-dot.error{background:#C0392B}
+.sync-text{color:#9A9890}
 
-  .main{padding:40px 48px}
-  .page{display:none}.page.active{display:block}
-  .page-header{margin-bottom:32px}
-  .page-title{font-size:24px;font-weight:600;letter-spacing:-0.02em}
-  .page-sub{font-size:13px;color:var(--muted);margin-top:4px}
+.main{padding:40px 48px}
+.page{display:none}.page.active{display:block}
+.page-header{margin-bottom:32px}
+.page-title{font-size:24px;font-weight:600;letter-spacing:-0.02em}
+.page-sub{font-size:13px;color:var(–muted);margin-top:4px}
 
-  .loading-overlay{position:fixed;inset:0;background:rgba(245,243,238,0.85);z-index:200;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px}
-  .loading-overlay.hidden{display:none}
-  .spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin 0.7s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .loading-text{font-size:13px;color:var(--muted);font-family:var(--mono)}
+.loading-overlay{position:fixed;inset:0;background:rgba(245,243,238,0.85);z-index:200;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.loading-overlay.hidden{display:none}
+.spinner{width:28px;height:28px;border:2px solid var(–border);border-top-color:var(–text);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(–muted);font-family:var(–mono)}
 
-  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px}
-  .metric-card{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:16px 20px}
-  .metric-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
-  .metric-val{font-size:28px;font-weight:600;font-family:var(--mono)}
-  .metric-val.danger{color:var(--red)}.metric-val.warn{color:var(--amber)}.metric-val.ok{color:var(--green)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px}
+.metric-card{background:var(–surface);border:0.5px solid var(–border);border-radius:10px;padding:16px 20px}
+.metric-label{font-size:11px;color:var(–muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
+.metric-val{font-size:28px;font-weight:600;font-family:var(–mono)}
+.metric-val.danger{color:var(–red)}.metric-val.warn{color:var(–amber)}.metric-val.ok{color:var(–green)}
 
-  .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
-  .btn-add{background:var(--text);color:#F5F3EE;border:none;border-radius:8px;padding:8px 16px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:opacity 0.15s}
-  .btn-add:hover{opacity:0.85}
-  .btn-add svg{width:14px;height:14px}
-  .btn-sec{background:none;color:var(--text);border:0.5px solid var(--border);border-radius:8px;padding:8px 14px;font-family:var(--sans);font-size:13px;cursor:pointer;transition:background 0.15s}
-  .btn-sec:hover{background:var(--surface)}
-  .filter-select{border:0.5px solid var(--border);background:var(--surface);border-radius:8px;padding:7px 12px;font-family:var(--sans);font-size:13px;color:var(--text);cursor:pointer}
-  .search-input{border:0.5px solid var(--border);background:var(--surface);border-radius:8px;padding:7px 12px;font-family:var(--sans);font-size:13px;color:var(--text);flex:1;max-width:240px}
-  .search-input:focus{outline:none;border-color:var(--border-strong)}
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.btn-add{background:var(–text);color:#F5F3EE;border:none;border-radius:8px;padding:8px 16px;font-family:var(–sans);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:opacity 0.15s}
+.btn-add:hover{opacity:0.85}
+.btn-add svg{width:14px;height:14px}
+.btn-sec{background:none;color:var(–text);border:0.5px solid var(–border);border-radius:8px;padding:8px 14px;font-family:var(–sans);font-size:13px;cursor:pointer;transition:background 0.15s}
+.btn-sec:hover{background:var(–surface)}
+.filter-select{border:0.5px solid var(–border);background:var(–surface);border-radius:8px;padding:7px 12px;font-family:var(–sans);font-size:13px;color:var(–text);cursor:pointer}
+.search-input{border:0.5px solid var(–border);background:var(–surface);border-radius:8px;padding:7px 12px;font-family:var(–sans);font-size:13px;color:var(–text);flex:1;max-width:240px}
+.search-input:focus{outline:none;border-color:var(–border-strong)}
 
-  .table-wrap{background:var(--surface);border:0.5px solid var(--border);border-radius:12px;overflow:hidden}
-  table{width:100%;border-collapse:collapse;table-layout:fixed}
-  thead tr{background:#F9F8F5}
-  th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);padding:12px 14px;text-align:left;border-bottom:0.5px solid var(--border)}
-  td{padding:11px 14px;border-bottom:0.5px solid var(--border);vertical-align:top;font-size:13px}
-  tr:last-child td{border-bottom:none}
-  tr:hover td{background:#FAFAF8}
-  .col-desc{width:28%}.col-amb{width:14%}.col-resp{width:12%}.col-status{width:11%}.col-prior{width:8%}.col-obs{width:18%}.col-act{width:9%}
+.table-wrap{background:var(–surface);border:0.5px solid var(–border);border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+thead tr{background:#F9F8F5}
+th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(–muted);padding:12px 14px;text-align:left;border-bottom:0.5px solid var(–border)}
+td{padding:11px 14px;border-bottom:0.5px solid var(–border);vertical-align:top;font-size:13px}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FAFAF8}
+.col-desc{width:28%}.col-amb{width:14%}.col-resp{width:12%}.col-status{width:11%}.col-prior{width:8%}.col-obs{width:18%}.col-act{width:9%}
 
-  .badge{display:inline-block;font-size:11px;font-weight:500;font-family:var(--mono);padding:2px 9px;border-radius:20px;white-space:nowrap}
-  .badge-danger{background:var(--red-bg);color:var(--red)}
-  .badge-warn{background:var(--amber-bg);color:var(--amber)}
-  .badge-ok{background:var(--green-bg);color:var(--green)}
-  .badge-info{background:var(--blue-bg);color:var(--blue)}
-  .badge-neutral{background:#F1EFE8;color:#5F5E5A}
+.badge{display:inline-block;font-size:11px;font-weight:500;font-family:var(–mono);padding:2px 9px;border-radius:20px;white-space:nowrap}
+.badge-danger{background:var(–red-bg);color:var(–red)}
+.badge-warn{background:var(–amber-bg);color:var(–amber)}
+.badge-ok{background:var(–green-bg);color:var(–green)}
+.badge-info{background:var(–blue-bg);color:var(–blue)}
+.badge-neutral{background:#F1EFE8;color:#5F5E5A}
 
-  [contenteditable]{outline:none;cursor:text;border-radius:4px;padding:2px 4px;margin:-2px -4px;transition:background 0.15s}
-  [contenteditable]:hover{background:#F5F3EE}
-  [contenteditable]:focus{background:#EFEFEA}
-  .status-sel{border:none;background:transparent;font-family:var(--mono);font-size:11px;font-weight:500;cursor:pointer;padding:2px 6px;border-radius:20px;appearance:none;-webkit-appearance:none}
+[contenteditable]{outline:none;cursor:text;border-radius:4px;padding:2px 4px;margin:-2px -4px;transition:background 0.15s}
+[contenteditable]:hover{background:#F5F3EE}
+[contenteditable]:focus{background:#EFEFEA}
+.status-sel{border:none;background:transparent;font-family:var(–mono);font-size:11px;font-weight:500;cursor:pointer;padding:2px 6px;border-radius:20px;appearance:none;-webkit-appearance:none}
 
-  .btn-del{background:#FDF0EE;border:0.5px solid #F5C4B3;color:var(--red);cursor:pointer;font-size:12px;font-family:var(--mono);font-weight:500;padding:4px 10px;border-radius:6px;transition:all 0.15s;white-space:nowrap}
-  .btn-del:hover{background:var(--red);color:white;border-color:var(--red)}
+.btn-del{background:#FDF0EE;border:0.5px solid #F5C4B3;color:var(–red);cursor:pointer;font-size:12px;font-family:var(–mono);font-weight:500;padding:4px 10px;border-radius:6px;transition:all 0.15s;white-space:nowrap}
+.btn-del:hover{background:var(–red);color:white;border-color:var(–red)}
 
-  .frente-grid{display:grid;gap:10px}
-  .frente-card{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:16px 20px;display:grid;grid-template-columns:2fr 1fr 1.5fr 100px;align-items:center;gap:16px}
-  .frente-name{font-size:13px;font-weight:500}
-  .frente-resp{font-size:12px;color:var(--muted);margin-top:2px}
-  .progress-wrap{display:flex;align-items:center;gap:10px}
-  .progress-bar{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
-  .progress-fill{height:100%;border-radius:3px;background:var(--text);transition:width 0.3s}
-  .progress-pct{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:30px}
-  input[type=range]{width:100%;accent-color:var(--text);cursor:pointer}
+.frente-grid{display:grid;gap:10px}
+.frente-card{background:var(–surface);border:0.5px solid var(–border);border-radius:10px;padding:16px 20px;display:grid;grid-template-columns:2fr 1fr 1.5fr 100px;align-items:center;gap:16px}
+.frente-name{font-size:13px;font-weight:500}
+.frente-resp{font-size:12px;color:var(–muted);margin-top:2px}
+.progress-wrap{display:flex;align-items:center;gap:10px}
+.progress-bar{flex:1;height:5px;background:var(–bg);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;background:var(–text);transition:width 0.3s}
+.progress-pct{font-family:var(–mono);font-size:11px;color:var(–muted);min-width:30px}
+input[type=range]{width:100%;accent-color:var(–text);cursor:pointer}
 
-  .cobrar-section{margin-bottom:28px}
-  .cobrar-section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);padding-bottom:8px;border-bottom:0.5px solid var(--border);margin-bottom:12px}
-  .cobrar-card{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start}
-  .cobrar-title{font-size:13px;font-weight:500;margin-bottom:3px}
-  .cobrar-para{font-size:12px;color:var(--muted);margin-bottom:4px}
-  .cobrar-desc{font-size:12px;color:var(--muted)}
-  .cobrar-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
-  .btn-done{background:none;border:0.5px solid var(--border);border-radius:6px;padding:4px 10px;font-family:var(--mono);font-size:11px;cursor:pointer;color:var(--muted);transition:all 0.15s;white-space:nowrap}
-  .btn-done:hover{background:var(--green-bg);color:var(--green);border-color:var(--green)}
-  .cobrar-card.done{opacity:0.4}
-  .cobrar-card.done .cobrar-title{text-decoration:line-through}
+.cobrar-section{margin-bottom:28px}
+.cobrar-section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(–muted);padding-bottom:8px;border-bottom:0.5px solid var(–border);margin-bottom:12px}
+.cobrar-card{background:var(–surface);border:0.5px solid var(–border);border-radius:10px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start}
+.cobrar-title{font-size:13px;font-weight:500;margin-bottom:3px}
+.cobrar-para{font-size:12px;color:var(–muted);margin-bottom:4px}
+.cobrar-desc{font-size:12px;color:var(–muted)}
+.cobrar-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.btn-done{background:none;border:0.5px solid var(–border);border-radius:6px;padding:4px 10px;font-family:var(–mono);font-size:11px;cursor:pointer;color:var(–muted);transition:all 0.15s;white-space:nowrap}
+.btn-done:hover{background:var(–green-bg);color:var(–green);border-color:var(–green)}
+.cobrar-card.done{opacity:0.4}
+.cobrar-card.done .cobrar-title{text-decoration:line-through}
 
-  .modal-bg{display:none;position:fixed;inset:0;background:rgba(26,25,22,0.45);z-index:100;align-items:center;justify-content:center}
-  .modal-bg.open{display:flex}
-  .modal{background:var(--surface);border-radius:14px;padding:28px 32px;width:560px;max-width:95vw;border:0.5px solid var(--border)}
-  .modal-title{font-size:16px;font-weight:600;margin-bottom:20px}
-  .form-row{margin-bottom:14px}
-  .form-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);display:block;margin-bottom:5px}
-  .form-input,.form-select,.form-textarea{width:100%;border:0.5px solid var(--border);border-radius:8px;padding:9px 12px;font-family:var(--sans);font-size:13px;color:var(--text);background:var(--surface)}
-  .form-textarea{resize:vertical;min-height:72px}
-  .form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--border-strong)}
-  .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
-  .btn-cancel{background:none;border:0.5px solid var(--border);border-radius:8px;padding:8px 16px;font-family:var(--sans);font-size:13px;cursor:pointer}
-  .btn-save{background:var(--text);color:#F5F3EE;border:none;border-radius:8px;padding:8px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(26,25,22,0.45);z-index:100;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(–surface);border-radius:14px;padding:28px 32px;width:560px;max-width:95vw;border:0.5px solid var(–border)}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:20px}
+.form-row{margin-bottom:14px}
+.form-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(–muted);display:block;margin-bottom:5px}
+.form-input,.form-select,.form-textarea{width:100%;border:0.5px solid var(–border);border-radius:8px;padding:9px 12px;font-family:var(–sans);font-size:13px;color:var(–text);background:var(–surface)}
+.form-textarea{resize:vertical;min-height:72px}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(–border-strong)}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.btn-cancel{background:none;border:0.5px solid var(–border);border-radius:8px;padding:8px 16px;font-family:var(–sans);font-size:13px;cursor:pointer}
+.btn-save{background:var(–text);color:#F5F3EE;border:none;border-radius:8px;padding:8px 20px;font-family:var(–sans);font-size:13px;font-weight:500;cursor:pointer}
 
-  .toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#F5F3EE;padding:10px 18px;border-radius:8px;font-size:13px;font-family:var(--mono);opacity:0;transform:translateY(8px);transition:all 0.3s;z-index:300;pointer-events:none}
-  .toast.show{opacity:1;transform:translateY(0)}
+.toast{position:fixed;bottom:24px;right:24px;background:var(–text);color:#F5F3EE;padding:10px 18px;border-radius:8px;font-size:13px;font-family:var(–mono);opacity:0;transform:translateY(8px);transition:all 0.3s;z-index:300;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+
+@media (max-width: 768px) {
+.app { grid-template-columns: 1fr; }
+.sidebar { position: relative; height: auto; flex-direction: row; flex-wrap: wrap; padding: 16px; gap: 0; }
+.sidebar-brand { padding: 0 0 12px; border-bottom: none; margin-bottom: 0; border-right: 0.5px solid #333; padding-right: 16px; margin-right: 16px; flex-shrink: 0; }
+.sidebar-brand img { width: 48px; margin-bottom: 8px; }
+.sidebar-label { font-size: 9px; }
+.sidebar-obra { font-size: 13px; }
+.sidebar-nav-group { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; flex: 1; }
+.nav-item { padding: 6px 10px; border-left: none; border-radius: 6px; font-size: 12px; }
+.nav-item.active { border-left: none; background: rgba(255,255,255,0.15); }
+.sidebar-section { display: none; }
+.sidebar-section-filters { display: none; }
+.sync-status { padding: 8px 0 0; margin-top: 0; border-top: none; font-size: 10px; width: 100%; }
+.main { padding: 20px 16px; }
+.metrics { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px; }
+.metric-card { padding: 12px 14px; }
+.metric-val { font-size: 22px; }
+.toolbar { gap: 8px; }
+.search-input { max-width: 100%; flex: 1; min-width: 0; }
+.filter-select { flex: 1; min-width: 0; }
+
+```
+.table-wrap { display: none; }
+.mobile-cards { display: block; }
+
+.m-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+.m-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.m-card-desc { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; line-height: 1.4; }
+.m-card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; align-items: center; }
+.m-card-meta span { font-size: 11px; color: var(--muted); background: var(--bg); padding: 2px 8px; border-radius: 20px; }
+.m-card-obs { font-size: 12px; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+.m-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.m-status-sel { border: 0.5px solid var(--border); background: var(--bg); font-family: var(--mono); font-size: 11px; font-weight: 500; cursor: pointer; padding: 4px 8px; border-radius: 20px; flex: 1; }
+
+.frente-card { grid-template-columns: 1fr; gap: 10px; }
+.frente-card > div:first-child { display: flex; justify-content: space-between; align-items: center; }
+```
+
+}
+@media (min-width: 769px) {
+.mobile-cards { display: none; }
+.sidebar-nav-group { display: contents; }
+.sidebar-section-filters { display: block; }
+}
 </style>
+
 </head>
 <body>
 <div class="loading-overlay" id="loading">
@@ -142,127 +189,133 @@
       <div class="sidebar-label">Controle de Obra</div>
       <div class="sidebar-obra">Casa M&amp;A</div>
     </div>
+    <div class="sidebar-nav-group">
     <div class="nav-item active" onclick="showPage('pendencias',this)"><span class="nav-dot"></span>Pendências<span class="nav-count urgent" id="cnt-pend">—</span></div>
     <div class="nav-item" onclick="showPage('frentes',this)"><span class="nav-dot"></span>Frentes de obra<span class="nav-count" id="cnt-frent">—</span></div>
     <div class="nav-item" onclick="showPage('cobrar',this)"><span class="nav-dot"></span>A cobrar<span class="nav-count" id="cnt-cobr">—</span></div>
-    <div class="sidebar-section">Filtros rápidos</div>
+    <div class="sidebar-section sidebar-section-filters">Filtros rápidos</div>
     <div class="nav-item" onclick="filtrarStatus('Urgente')"><span class="nav-dot" style="background:#C0392B"></span>Urgentes</div>
     <div class="nav-item" onclick="filtrarStatus('Em andamento')"><span class="nav-dot" style="background:#B7770D"></span>Em andamento</div>
     <div class="nav-item" onclick="filtrarStatus('Concluído')"><span class="nav-dot" style="background:#2D6A4F"></span>Concluídos</div>
+    </div>
     <div class="sync-status"><span class="sync-dot" id="sync-dot"></span><span class="sync-text" id="sync-text">conectando...</span></div>
   </aside>
 
   <main class="main">
 
-    <div class="page active" id="page-pendencias">
-      <div class="page-header">
-        <div class="page-title">Pendências da obra</div>
-        <div class="page-sub">Edite qualquer célula — salva automaticamente na nuvem.</div>
-      </div>
-      <div class="metrics">
-        <div class="metric-card"><div class="metric-label">Total</div><div class="metric-val" id="m-total">—</div></div>
-        <div class="metric-card"><div class="metric-label">Urgentes</div><div class="metric-val danger" id="m-urg">—</div></div>
-        <div class="metric-card"><div class="metric-label">Em andamento</div><div class="metric-val warn" id="m-and">—</div></div>
-        <div class="metric-card"><div class="metric-label">Concluídos</div><div class="metric-val ok" id="m-conc">—</div></div>
-      </div>
-      <div class="toolbar">
-        <button class="btn-add" onclick="abrirModal('modal-pend')">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
-          Nova pendência
-        </button>
-        <input class="search-input" type="text" placeholder="Buscar..." oninput="filtrarBusca(this.value)">
-        <select class="filter-select" onchange="filtrarAmb(this.value)">
-          <option value="">Todos os ambientes</option>
-                    <option>Hall de entrada</option>
-          <option>Sala de estar</option>
-          <option>Sala de jantar</option>
-          <option>Cozinha</option>
-          <option>Louçaria</option>
-          <option>Área de serviço</option>
-          <option>Banho de serviço</option>
-          <option>Hall de serviço</option>
-          <option>Despensa / Futuro BWC</option>
-          <option>Depósito</option>
-          <option>Lavabo</option>
-          <option>Escritório</option>
-          <option>Varanda gourmet</option>
-          <option>Garagem</option>
-          <option>Pátio horta</option>
-          <option>Pátio serviço</option>
-          <option>Pátio técnico</option>
-          <option>Escada</option>
-          <option>Circulação térreo</option>
-          <option>Suíte casal</option>
-          <option>Closet casal</option>
-          <option>Banho casal</option>
-          <option>Suíte Cecília</option>
-          <option>Closet Cecília</option>
-          <option>Banho Cecília</option>
-          <option>Suíte Enzo</option>
-          <option>Closet Enzo</option>
-          <option>Banho Enzo</option>
-          <option>Hall superior</option>
-          <option>Circulação superior</option>
-          <option>Maleiro</option>
-          <option>Área técnica</option>
-          <option>Fachada</option>
-          <option>Área externa / jardim</option>
-          <option>Piscina</option>
-          <option>Cobertura / telhado</option>
-          <option>Geral / toda a obra</option>
-        </select>
-        <button class="btn-sec" onclick="carregarTudo()">↺ Atualizar</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th class="col-desc">Descrição</th>
-            <th class="col-amb">Ambiente</th>
-            <th class="col-resp">Responsável</th>
-            <th class="col-status">Status</th>
-            <th class="col-prior">Prior.</th>
-            <th class="col-obs">Observação</th>
-            <th class="col-act">Ação</th>
-          </tr></thead>
-          <tbody id="tbody-pend"></tbody>
-        </table>
-      </div>
-    </div>
+```
+<div class="page active" id="page-pendencias">
+  <div class="page-header">
+    <div class="page-title">Pendências da obra</div>
+    <div class="page-sub">Edite qualquer célula — salva automaticamente na nuvem.</div>
+  </div>
+  <div class="metrics">
+    <div class="metric-card"><div class="metric-label">Total</div><div class="metric-val" id="m-total">—</div></div>
+    <div class="metric-card"><div class="metric-label">Urgentes</div><div class="metric-val danger" id="m-urg">—</div></div>
+    <div class="metric-card"><div class="metric-label">Em andamento</div><div class="metric-val warn" id="m-and">—</div></div>
+    <div class="metric-card"><div class="metric-label">Concluídos</div><div class="metric-val ok" id="m-conc">—</div></div>
+  </div>
+  <div class="toolbar">
+    <button class="btn-add" onclick="abrirModal('modal-pend')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+      Nova pendência
+    </button>
+    <input class="search-input" type="text" placeholder="Buscar..." oninput="filtrarBusca(this.value)">
+    <select class="filter-select" onchange="filtrarAmb(this.value)">
+      <option value="">Todos os ambientes</option>
+                <option>Hall de entrada</option>
+      <option>Sala de estar</option>
+      <option>Sala de jantar</option>
+      <option>Cozinha</option>
+      <option>Louçaria</option>
+      <option>Área de serviço</option>
+      <option>Banho de serviço</option>
+      <option>Hall de serviço</option>
+      <option>Despensa / Futuro BWC</option>
+      <option>Depósito</option>
+      <option>Lavabo</option>
+      <option>Escritório</option>
+      <option>Varanda gourmet</option>
+      <option>Garagem</option>
+      <option>Pátio horta</option>
+      <option>Pátio serviço</option>
+      <option>Pátio técnico</option>
+      <option>Escada</option>
+      <option>Circulação térreo</option>
+      <option>Suíte casal</option>
+      <option>Closet casal</option>
+      <option>Banho casal</option>
+      <option>Suíte Cecília</option>
+      <option>Closet Cecília</option>
+      <option>Banho Cecília</option>
+      <option>Suíte Enzo</option>
+      <option>Closet Enzo</option>
+      <option>Banho Enzo</option>
+      <option>Hall superior</option>
+      <option>Circulação superior</option>
+      <option>Maleiro</option>
+      <option>Área técnica</option>
+      <option>Fachada</option>
+      <option>Área externa / jardim</option>
+      <option>Piscina</option>
+      <option>Cobertura / telhado</option>
+      <option>Geral / toda a obra</option>
+    </select>
+    <button class="btn-sec" onclick="carregarTudo()">↺ Atualizar</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th class="col-desc">Descrição</th>
+        <th class="col-amb">Ambiente</th>
+        <th class="col-resp">Responsável</th>
+        <th class="col-status">Status</th>
+        <th class="col-prior">Prior.</th>
+        <th class="col-obs">Observação</th>
+        <th class="col-act">Ação</th>
+      </tr></thead>
+      <tbody id="tbody-pend"></tbody>
+    </table>
+  </div>
+  <div class="mobile-cards" id="mobile-cards-pend"></div>
+</div>
 
-    <div class="page" id="page-frentes">
-      <div class="page-header">
-        <div class="page-title">Frentes de obra</div>
-        <div class="page-sub">Arraste o controle para atualizar o avanço. Salva automaticamente.</div>
-      </div>
-      <div class="toolbar">
-        <button class="btn-add" onclick="abrirModal('modal-frente')">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
-          Nova frente
-        </button>
-        <button class="btn-sec" onclick="carregarTudo()">↺ Atualizar</button>
-      </div>
-      <div class="frente-grid" id="frente-grid"></div>
-    </div>
+<div class="page" id="page-frentes">
+  <div class="page-header">
+    <div class="page-title">Frentes de obra</div>
+    <div class="page-sub">Arraste o controle para atualizar o avanço. Salva automaticamente.</div>
+  </div>
+  <div class="toolbar">
+    <button class="btn-add" onclick="abrirModal('modal-frente')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+      Nova frente
+    </button>
+    <button class="btn-sec" onclick="carregarTudo()">↺ Atualizar</button>
+  </div>
+  <div class="frente-grid" id="frente-grid"></div>
+</div>
 
-    <div class="page" id="page-cobrar">
-      <div class="page-header">
-        <div class="page-title">A cobrar / acionar</div>
-        <div class="page-sub">Itens que dependem de resposta de terceiros.</div>
-      </div>
-      <div class="toolbar">
-        <button class="btn-add" onclick="abrirModal('modal-cobrar')">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
-          Nova cobrança
-        </button>
-        <button class="btn-sec" onclick="carregarTudo()">↺ Atualizar</button>
-      </div>
-      <div id="cobrar-container"></div>
-    </div>
+<div class="page" id="page-cobrar">
+  <div class="page-header">
+    <div class="page-title">A cobrar / acionar</div>
+    <div class="page-sub">Itens que dependem de resposta de terceiros.</div>
+  </div>
+  <div class="toolbar">
+    <button class="btn-add" onclick="abrirModal('modal-cobrar')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+      Nova cobrança
+    </button>
+    <button class="btn-sec" onclick="carregarTudo()">↺ Atualizar</button>
+  </div>
+  <div id="cobrar-container"></div>
+</div>
+```
 
   </main>
 </div>
 
 <!-- MODAL PENDÊNCIA -->
+
 <div class="modal-bg" id="modal-pend">
   <div class="modal">
     <div class="modal-title">Nova pendência</div>
@@ -353,6 +406,7 @@
 </div>
 
 <!-- MODAL FRENTE -->
+
 <div class="modal-bg" id="modal-frente">
   <div class="modal">
     <div class="modal-title">Nova frente de obra</div>
@@ -378,6 +432,7 @@
 </div>
 
 <!-- MODAL COBRAR -->
+
 <div class="modal-bg" id="modal-cobrar">
   <div class="modal">
     <div class="modal-title">Nova cobrança</div>
@@ -530,6 +585,29 @@ function renderTabela(){
     const txt=(p.desc+p.amb+p.resp+p.obs).toLowerCase();
     return(!filtroAtual||txt.includes(filtroAtual.toLowerCase()))&&(!filtroAmbAtual||p.amb===filtroAmbAtual)&&(!filtroStatusAtual||p.status===filtroStatusAtual);
   });
+  const isMobile = window.innerWidth <= 768;
+  if(isMobile){
+    document.getElementById('mobile-cards-pend').innerHTML=items.map(p=>`
+      <div class="m-card">
+        <div class="m-card-header">
+          <div class="m-card-desc" contenteditable="true" onblur="editPend('${p.id}','desc',this.innerText.trim())">${p.desc}</div>
+          <button class="btn-del" onclick="deletarPend('${p.id}')" style="flex-shrink:0;font-size:11px;padding:3px 8px">Excluir</button>
+        </div>
+        <div class="m-card-meta">
+          <span>${p.amb}</span>
+          <span>${p.resp}</span>
+          <span class="badge ${pClass(p.prior)}">${p.prior}</span>
+        </div>
+        <div class="m-card-obs">${p.obs}</div>
+        <div class="m-card-footer">
+          <select class="m-status-sel badge ${sClass(p.status)}" onchange="editPend('${p.id}','status',this.value);this.className='m-status-sel badge '+sClass(this.value)">
+            ${['Urgente','Em andamento','Aguardando','Não iniciado','Concluído'].map(s=>`<option ${s===p.status?'selected':''}>`+s+`</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    `).join('');
+    return;
+  }
   document.getElementById('tbody-pend').innerHTML=items.map(p=>`
     <tr>
       <td class="col-desc"><span contenteditable="true" onblur="editPend('${p.id}','desc',this.innerText.trim())">${p.desc}</span></td>
@@ -645,5 +723,6 @@ async function salvarCobrar(){
 document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
 carregarTudo();
 </script>
+
 </body>
 </html>
