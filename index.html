@@ -675,10 +675,37 @@ async function api(aba,method,payload){
   return r.json();
 }
 
+function normalizePrazo(val){
+  if(!val||val==='')return'';
+  const s=String(val);
+  // Already ISO format YYYY-MM-DD
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  // DD/MM/YYYY format from Sheets
+  if(/^\d{2}\/\d{2}\/\d{4}$/.test(s)){
+    const[d,m,y]=s.split('/');
+    return `${y}-${m}-${d}`;
+  }
+  // Date object from Sheets (number)
+  if(!isNaN(val)&&val>0){
+    try{
+      const d=new Date(Math.round((val-25569)*86400*1000));
+      return d.toISOString().split('T')[0];
+    }catch(e){return'';}
+  }
+  return s;
+}
 function rowsToObjs(rows){
   if(!rows||rows.length<2)return[];
   const h=rows[0];
-  return rows.slice(1).map(row=>{const o={};h.forEach((k,i)=>o[k]=row[i]!==undefined?row[i]:'');return o});
+  return rows.slice(1).map(row=>{
+    const o={};
+    h.forEach((k,i)=>{
+      let v=row[i]!==undefined?row[i]:'';
+      if(k==='prazo')v=normalizePrazo(v);
+      o[k]=v;
+    });
+    return o;
+  });
 }
 function objsToRows(objs,headers){return[headers,...objs.map(o=>headers.map(h=>o[h]!==undefined?o[h]:''))];}
 
