@@ -943,11 +943,11 @@ function renderTabela(){
   `).join('');
 }
 
-let frenteSort=null;
+let frenteSort='desc';
 function sortFrentes(){
   if(frenteSort===null){frenteSort='asc';document.getElementById('btn-sort-frentes').textContent='% Crescente ↑';}
   else if(frenteSort==='asc'){frenteSort='desc';document.getElementById('btn-sort-frentes').textContent='% Decrescente ↓';}
-  else{frenteSort=null;document.getElementById('btn-sort-frentes').textContent='% Crescente ↑';}
+  else if(frenteSort==='desc'){frenteSort='asc';document.getElementById('btn-sort-frentes').textContent='% Crescente ↑';}
   renderFrentes();
 }
 function renderFrentes(){
