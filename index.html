@@ -690,7 +690,15 @@ async function carregarTudo(){
   document.getElementById('loading').classList.remove('hidden');
   try{
     const [p,f,c]=await Promise.all([carregarAba('pendencias'),carregarAba('frentes'),carregarAba('cobrar')]);
-    if(p)dados.pendencias=p; else{dados.pendencias=rowsToObjs(INICIAL.pendencias);await salvarAba('pendencias',dados.pendencias)}
+    if(p){
+      dados.pendencias=p;
+      // Migration: if loaded data doesn't have prazo field, add it and re-save
+      const hasPrazo=dados.pendencias.length===0||'prazo' in dados.pendencias[0];
+      if(!hasPrazo){
+        dados.pendencias=dados.pendencias.map(x=>({...x,prazo:''}));
+        await salvarAba('pendencias',dados.pendencias);
+      }
+    } else{dados.pendencias=rowsToObjs(INICIAL.pendencias);await salvarAba('pendencias',dados.pendencias)}
     if(f)dados.frentes=f; else{dados.frentes=rowsToObjs(INICIAL.frentes);await salvarAba('frentes',dados.frentes)}
     if(c)dados.cobrar=c; else{dados.cobrar=rowsToObjs(INICIAL.cobrar);await salvarAba('cobrar',dados.cobrar)}
     renderTabela();renderFrentes();renderCobrar();atualizarMetricas();
@@ -850,19 +858,22 @@ function renderCobrar(){
 let prazoTimeout=null;
 function salvarPrazo(id,val){
   const p=dados.pendencias.find(x=>String(x.id)===String(id));
-  if(!p)return;
+  if(!p){toast('Erro: pendência não encontrada');return;}
   p.prazo=val;
+  toast('Salvando prazo...');
   setSyncStatus('saving','salvando...');
   clearTimeout(prazoTimeout);
   prazoTimeout=setTimeout(async()=>{
     try{
-      await salvarAba('pendencias',dados.pendencias);
+      const rows=objsToRows(dados.pendencias,HEADERS['pendencias']);
+      await api('pendencias','SET',rows);
       setSyncStatus('ok','sincronizado');
-      toast('Prazo salvo');
+      toast('Prazo salvo com sucesso');
     }catch(e){
       setSyncStatus('error','erro ao salvar');
+      toast('Erro: '+e.message);
     }
-  },600);
+  },400);
 }
 function editPend(id,campo,val){const p=dados.pendencias.find(x=>String(x.id)===String(id));if(p){p[campo]=val;agendarSalvamento('pendencias');atualizarMetricas()}}
 function editFrente(id,campo,val){const f=dados.frentes.find(x=>String(x.id)===String(id));if(f){f[campo]=val;agendarSalvamento('frentes')}}
