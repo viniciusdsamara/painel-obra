@@ -742,10 +742,11 @@ function applySorting(items){
 }
 
 function renderTabela(){
-  const items=dados.pendencias.filter(p=>{
+  let items=dados.pendencias.filter(p=>{
     const txt=(p.desc+p.amb+p.resp+p.obs).toLowerCase();
     return(!filtroAtual||txt.includes(filtroAtual.toLowerCase()))&&(!filtroAmbAtual||p.amb===filtroAmbAtual)&&(!filtroStatusAtual||p.status===filtroStatusAtual);
   });
+  items=applySorting(items);
   const isMobile = window.innerWidth <= 768;
   if(isMobile){
     document.getElementById('mobile-cards-pend').innerHTML=items.map(p=>`
