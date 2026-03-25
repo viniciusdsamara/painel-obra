@@ -521,7 +521,7 @@
       </div>
       <div><label class="form-label">Prioridade</label>
         <select class="form-select" id="f-prior">
-          <option>Alta</option><option>Média</option><option>Baixa</option>
+          <option>Alta</option><option>Média</option><option>Baixa</option><option>Zero</option>
         </select>
       </div>
     </div>
@@ -763,11 +763,11 @@ function atualizarMetricas(){
 }
 
 function sClass(s){if(s==='Urgente'||s==='Bloqueado')return'badge-danger';if(s==='Em andamento'||s==='Esta semana')return'badge-warn';if(s==='Concluído')return'badge-ok';if(s==='Contratado')return'badge-info';return'badge-neutral'}
-function pClass(p){if(p==='Alta')return'badge-danger';if(p==='Média')return'badge-warn';return'badge-neutral'}
+function pClass(p){if(p==='Alta')return'badge-danger';if(p==='Média')return'badge-warn';if(p==='Zero')return'badge-neutral';return'badge-neutral'}
 
 let sortField=null;
 let sortDir=null;
-const PRIOR_ORDER={'Alta':1,'Média':2,'Baixa':3};
+const PRIOR_ORDER={'Alta':1,'Média':2,'Baixa':3,'Zero':4};
 
 function toggleSort(field){
   if(sortField!==field){sortField=field;sortDir='asc'}
@@ -802,6 +802,8 @@ function applySorting(items){
 function renderTabela(){
   let items=dados.pendencias.filter(p=>{
     const txt=(p.desc+p.amb+p.resp+p.obs).toLowerCase();
+    const mostrarConcluido=filtroStatusAtual==='Concluído';
+    if(p.status==='Concluído'&&!mostrarConcluido)return false;
     return(!filtroAtual||txt.includes(filtroAtual.toLowerCase()))&&(!filtroAmbAtual||p.amb===filtroAmbAtual)&&(!filtroRespAtual||p.resp===filtroRespAtual)&&(!filtroStatusAtual||p.status===filtroStatusAtual);
   });
   items=applySorting(items);
@@ -816,7 +818,7 @@ function renderTabela(){
         <div class="m-card-meta">
           <span>${p.amb}</span>
           <span>${p.resp}</span>
-          <select class="status-sel badge ${pClass(p.prior)}" onchange="editPend('${p.id}','prior',this.value);this.className='status-sel badge '+pClass(this.value)">${['Alta','Média','Baixa'].map(s=>`<option ${s===p.prior?'selected':''}>`+s+`</option>`).join('')}</select>
+          <select class="status-sel badge ${pClass(p.prior)}" onchange="editPend('${p.id}','prior',this.value);this.className='status-sel badge '+pClass(this.value)">${['Alta','Média','Baixa','Zero'].map(s=>`<option ${s===p.prior?'selected':''}>`+s+`</option>`).join('')}</select>
         </div>
         <div class="m-card-obs">${p.obs}</div>
         ${p.prazo?`<div style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:6px">Prazo: <input type="date" value="${p.prazo||''}" onchange="salvarPrazo('${p.id}',this.value)" style="border:0.5px solid var(--border);border-radius:6px;padding:2px 6px;font-family:var(--mono);font-size:11px;background:var(--surface);color:var(--text)"></div>`:''}
@@ -832,8 +834,16 @@ function renderTabela(){
   document.getElementById('tbody-pend').innerHTML=items.map(p=>`
     <tr>
       <td class="col-desc" data-label="Descrição"><span contenteditable="true" onblur="editPend('${p.id}','desc',this.innerText.trim())">${p.desc}</span></td>
-      <td class="col-amb" data-label="Ambiente"><span contenteditable="true" onblur="editPend('${p.id}','amb',this.innerText.trim())">${p.amb}</span></td>
-      <td class="col-resp" data-label="Responsável"><span contenteditable="true" onblur="editPend('${p.id}','resp',this.innerText.trim())">${p.resp}</span></td>
+      <td class="col-amb" data-label="Ambiente">
+        <select class="status-sel" style="border:none;font-size:12px;color:var(--text);cursor:pointer;width:100%;font-family:var(--sans);background:transparent" onchange="editPend('${p.id}','amb',this.value)">
+          ${['Hall de entrada','Sala de estar','Sala de jantar','Cozinha','Louçaria','Área de serviço','Banho de serviço','Hall de serviço','Despensa / Futuro BWC','Depósito','Lavabo','Escritório','Varanda gourmet','Garagem','Pátio horta','Pátio serviço','Pátio técnico','Escada','Circulação térreo','Suíte casal','Closet casal','Banho casal','Suíte Cecília','Closet Cecília','Banho Cecília','Suíte Enzo','Closet Enzo','Banho Enzo','Hall superior','Circulação superior','Maleiro','Área técnica','Fachada','Área externa / jardim','Piscina','Cobertura / telhado','Geral / toda a obra'].map(a=>`<option ${a===p.amb?'selected':''}>` +a+`</option>`).join('')}
+        </select>
+      </td>
+      <td class="col-resp" data-label="Responsável">
+        <select class="status-sel" style="border:none;font-size:12px;color:var(--text);cursor:pointer;width:100%;font-family:var(--sans);background:transparent" onchange="editPend('${p.id}','resp',this.value)">
+          ${['Civil','Elétrica','Hidráulica','Marcenaria','Carpintaria','Porta','Caixilhos','Steel','ZAIT','Arquitetura','Fornecedor','Cliente'].map(r=>`<option ${r===p.resp?'selected':''}>` +r+`</option>`).join('')}
+        </select>
+      </td>
       <td class="col-status" data-label="Status">
         <select class="status-sel badge ${sClass(p.status)}" onchange="editPend('${p.id}','status',this.value);this.className='status-sel badge '+sClass(this.value)">
           ${['Urgente','Em andamento','Aguardando','Não iniciado','Concluído'].map(s=>`<option ${s===p.status?'selected':''}>` +s+`</option>`).join('')}
@@ -841,7 +851,7 @@ function renderTabela(){
       </td>
       <td class="col-prior" data-label="Prioridade">
         <select class="status-sel badge ${pClass(p.prior)}" onchange="editPend('${p.id}','prior',this.value);this.className='status-sel badge '+pClass(this.value)">
-          ${['Alta','Média','Baixa'].map(s=>`<option ${s===p.prior?'selected':''}>`+s+`</option>`).join('')}
+          ${['Alta','Média','Baixa','Zero'].map(s=>`<option ${s===p.prior?'selected':''}>`+s+`</option>`).join('')}
         </select>
       </td>
       <td class="col-prazo" data-label="Prazo"><input type="date" value="${p.prazo||''}" onchange="salvarPrazo('${p.id}',this.value)" style="border:0.5px solid var(--border);border-radius:6px;padding:2px 4px;font-family:var(--mono);font-size:10px;background:var(--surface);color:var(--text);width:100%;min-width:0"></td>
@@ -914,7 +924,15 @@ function salvarPrazo(id,val){
     }
   },400);
 }
-function editPend(id,campo,val){const p=dados.pendencias.find(x=>String(x.id)===String(id));if(p){p[campo]=val;agendarSalvamento('pendencias');atualizarMetricas()}}
+function editPend(id,campo,val){
+  const p=dados.pendencias.find(x=>String(x.id)===String(id));
+  if(!p)return;
+  p[campo]=val;
+  if(campo==='status'&&val==='Concluído'){p.prior='Zero';}
+  agendarSalvamento('pendencias');
+  atualizarMetricas();
+  renderTabela();
+}
 function editFrente(id,campo,val){const f=dados.frentes.find(x=>String(x.id)===String(id));if(f){f[campo]=val;agendarSalvamento('frentes')}}
 function editCobrar(id,campo,val){const c=dados.cobrar.find(x=>String(x.id)===String(id));if(c){c[campo]=val;agendarSalvamento('cobrar')}}
 function updatePct(id,val){document.getElementById('pf-'+id).style.width=val+'%';document.getElementById('pp-'+id).textContent=val+'%'}
@@ -945,7 +963,11 @@ function filtrarStatusMobile(v){
 function filtrarBusca(v){filtroAtual=v;renderTabela()}
 function filtrarAmb(v){filtroAmbAtual=v;renderTabela()}
 function filtrarResp(v){filtroRespAtual=v;renderTabela()}
-function filtrarStatus(v){filtroStatusAtual=filtroStatusAtual===v?'':v;showPage('pendencias',document.querySelectorAll('.nav-item')[0]);renderTabela()}
+function filtrarStatus(v){
+  filtroStatusAtual=filtroStatusAtual===v?'':v;
+  showPage('pendencias',document.querySelectorAll('.nav-item')[0]);
+  renderTabela();
+}
 function abrirModal(id){document.getElementById(id).classList.add('open')}
 function fecharModal(id){document.getElementById(id).classList.remove('open')}
 function novoId(lista){return lista.length?Math.max(...lista.map(x=>Number(x.id)||0))+1:1}
