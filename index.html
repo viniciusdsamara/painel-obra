@@ -1,59 +1,649 @@
-function doGet(e) {
-  return handleRequest(e);
-}
-
-function doPost(e) {
-  return handleRequest(e);
-}
-
-function handleRequest(e) {
-  const lock = LockService.getScriptLock();
-  lock.tryLock(10000);
-  
-  try {
-    const ss = SpreadsheetApp.openById(getOrCreateSheet());
-    const aba = e.parameter.aba || 'pendencias';
-    const sheet = ss.getSheetByName(aba);
-    const method = e.parameter.method || 'GET';
-    
-    if (method === 'GET') {
-      const data = sheet.getDataRange().getValues();
-      return json({data: data});
-    }
-    
-    if (method === 'SET') {
-      const payload = JSON.parse(e.parameter.payload);
-      sheet.clearContents();
-      sheet.getRange(1, 1, payload.length, payload[0].length).setValues(payload);
-      return json({ok: true});
-    }
-    
-  } catch(err) {
-    return json({error: err.toString()});
-  } finally {
-    lock.releaseLock();
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Obra — ZAIT</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#F5F3EE;--surface:#FFFFFF;--border:#E0DDD6;--border-strong:#C8C5BC;
+    --text:#1A1916;--muted:#7A7870;
+    --red:#C0392B;--red-bg:#FDF0EE;
+    --amber:#B7770D;--amber-bg:#FDF6E3;
+    --green:#2D6A4F;--green-bg:#EAF4EE;
+    --blue:#1A5276;--blue-bg:#EAF2FA;
+    --mono:'DM Mono',monospace;--sans:'Syne',sans-serif;
   }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);font-family:var(--sans);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh}
+  .app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+
+  .sidebar{background:var(--text);color:#F5F3EE;padding:28px 0;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
+  .sidebar-brand{padding:0 22px 20px;border-bottom:0.5px solid #333;margin-bottom:20px}
+  .sidebar-brand img{width:68px;filter:invert(1);display:block;margin-bottom:14px}
+  .sidebar-label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#9A9890;margin-bottom:4px}
+  .sidebar-obra{font-size:15px;font-weight:600;color:#F5F3EE;line-height:1.3}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 22px;cursor:pointer;font-size:13px;color:#9A9890;border-left:2px solid transparent;transition:all 0.15s}
+  .nav-item:hover{color:#F5F3EE;background:rgba(255,255,255,0.05)}
+  .nav-item.active{color:#F5F3EE;border-left-color:#F5F3EE;background:rgba(255,255,255,0.08)}
+  .nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+  .nav-count{margin-left:auto;font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.1);padding:1px 7px;border-radius:20px}
+  .nav-count.urgent{background:var(--red);color:white}
+  .sidebar-section{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#555;padding:16px 22px 6px}
+  .sync-status{font-family:var(--mono);font-size:11px;padding:16px 22px 0;margin-top:auto;border-top:0.5px solid #333}
+  .sync-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;background:#555}
+  .sync-dot.ok{background:#2D6A4F}.sync-dot.saving{background:#B7770D}.sync-dot.error{background:#C0392B}
+  .sync-text{color:#9A9890}
+
+  .main{padding:40px 48px}
+  .page{display:none}.page.active{display:block}
+  .page-header{margin-bottom:32px}
+  .page-title{font-size:24px;font-weight:600;letter-spacing:-0.02em}
+  .page-sub{font-size:13px;color:var(--muted);margin-top:4px}
+
+  .loading-overlay{position:fixed;inset:0;background:rgba(245,243,238,0.85);z-index:200;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+  .loading-overlay.hidden{display:none}
+  .spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin 0.7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-text{font-size:13px;color:var(--muted);font-family:var(--mono)}
+
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px}
+  .metric-card{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:16px 20px}
+  .metric-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
+  .metric-val{font-size:28px;font-weight:600;font-family:var(--mono)}
+  .metric-val.danger{color:var(--red)}.metric-val.warn{color:var(--amber)}.metric-val.ok{color:var(--green)}
+
+  .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .btn-add{background:var(--text);color:#F5F3EE;border:none;border-radius:8px;padding:8px 16px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:opacity 0.15s}
+  .btn-add:hover{opacity:0.85}
+  .btn-add svg{width:14px;height:14px}
+  .btn-sec{background:none;color:var(--text);border:0.5px solid var(--border);border-radius:8px;padding:8px 14px;font-family:var(--sans);font-size:13px;cursor:pointer;transition:background 0.15s}
+  .btn-sec:hover{background:var(--surface)}
+  .filter-select{border:0.5px solid var(--border);background:var(--surface);border-radius:8px;padding:7px 12px;font-family:var(--sans);font-size:13px;color:var(--text);cursor:pointer}
+  .search-input{border:0.5px solid var(--border);background:var(--surface);border-radius:8px;padding:7px 12px;font-family:var(--sans);font-size:13px;color:var(--text);flex:1;max-width:240px}
+  .search-input:focus{outline:none;border-color:var(--border-strong)}
+
+  .table-wrap{background:var(--surface);border:0.5px solid var(--border);border-radius:12px;overflow:hidden}
+  table{width:100%;border-collapse:collapse;table-layout:fixed}
+  thead tr{background:#F9F8F5}
+  th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);padding:12px 14px;text-align:left;border-bottom:0.5px solid var(--border)}
+  td{padding:11px 14px;border-bottom:0.5px solid var(--border);vertical-align:top;font-size:13px}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#FAFAF8}
+  .col-desc{width:28%}.col-amb{width:14%}.col-resp{width:12%}.col-status{width:11%}.col-prior{width:8%}.col-obs{width:18%}.col-act{width:9%}
+
+  .badge{display:inline-block;font-size:11px;font-weight:500;font-family:var(--mono);padding:2px 9px;border-radius:20px;white-space:nowrap}
+  .badge-danger{background:var(--red-bg);color:var(--red)}
+  .badge-warn{background:var(--amber-bg);color:var(--amber)}
+  .badge-ok{background:var(--green-bg);color:var(--green)}
+  .badge-info{background:var(--blue-bg);color:var(--blue)}
+  .badge-neutral{background:#F1EFE8;color:#5F5E5A}
+
+  [contenteditable]{outline:none;cursor:text;border-radius:4px;padding:2px 4px;margin:-2px -4px;transition:background 0.15s}
+  [contenteditable]:hover{background:#F5F3EE}
+  [contenteditable]:focus{background:#EFEFEA}
+  .status-sel{border:none;background:transparent;font-family:var(--mono);font-size:11px;font-weight:500;cursor:pointer;padding:2px 6px;border-radius:20px;appearance:none;-webkit-appearance:none}
+
+  .btn-del{background:#FDF0EE;border:0.5px solid #F5C4B3;color:var(--red);cursor:pointer;font-size:12px;font-family:var(--mono);font-weight:500;padding:4px 10px;border-radius:6px;transition:all 0.15s;white-space:nowrap}
+  .btn-del:hover{background:var(--red);color:white;border-color:var(--red)}
+
+  .frente-grid{display:grid;gap:10px}
+  .frente-card{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:16px 20px;display:grid;grid-template-columns:2fr 1fr 1.5fr 100px;align-items:center;gap:16px}
+  .frente-name{font-size:13px;font-weight:500}
+  .frente-resp{font-size:12px;color:var(--muted);margin-top:2px}
+  .progress-wrap{display:flex;align-items:center;gap:10px}
+  .progress-bar{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+  .progress-fill{height:100%;border-radius:3px;background:var(--text);transition:width 0.3s}
+  .progress-pct{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:30px}
+  input[type=range]{width:100%;accent-color:var(--text);cursor:pointer}
+
+  .cobrar-section{margin-bottom:28px}
+  .cobrar-section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);padding-bottom:8px;border-bottom:0.5px solid var(--border);margin-bottom:12px}
+  .cobrar-card{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start}
+  .cobrar-title{font-size:13px;font-weight:500;margin-bottom:3px}
+  .cobrar-para{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .cobrar-desc{font-size:12px;color:var(--muted)}
+  .cobrar-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+  .btn-done{background:none;border:0.5px solid var(--border);border-radius:6px;padding:4px 10px;font-family:var(--mono);font-size:11px;cursor:pointer;color:var(--muted);transition:all 0.15s;white-space:nowrap}
+  .btn-done:hover{background:var(--green-bg);color:var(--green);border-color:var(--green)}
+  .cobrar-card.done{opacity:0.4}
+  .cobrar-card.done .cobrar-title{text-decoration:line-through}
+
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(26,25,22,0.45);z-index:100;align-items:center;justify-content:center}
+  .modal-bg.open{display:flex}
+  .modal{background:var(--surface);border-radius:14px;padding:28px 32px;width:560px;max-width:95vw;border:0.5px solid var(--border)}
+  .modal-title{font-size:16px;font-weight:600;margin-bottom:20px}
+  .form-row{margin-bottom:14px}
+  .form-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);display:block;margin-bottom:5px}
+  .form-input,.form-select,.form-textarea{width:100%;border:0.5px solid var(--border);border-radius:8px;padding:9px 12px;font-family:var(--sans);font-size:13px;color:var(--text);background:var(--surface)}
+  .form-textarea{resize:vertical;min-height:72px}
+  .form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--border-strong)}
+  .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+  .btn-cancel{background:none;border:0.5px solid var(--border);border-radius:8px;padding:8px 16px;font-family:var(--sans);font-size:13px;cursor:pointer}
+  .btn-save{background:var(--text);color:#F5F3EE;border:none;border-radius:8px;padding:8px 20px;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer}
+
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#F5F3EE;padding:10px 18px;border-radius:8px;font-size:13px;font-family:var(--mono);opacity:0;transform:translateY(8px);transition:all 0.3s;z-index:300;pointer-events:none}
+  .toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">carregando dados...</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img src="data:image/png;base64,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" alt="ZAIT">
+      <div class="sidebar-label">Controle de Obra</div>
+      <div class="sidebar-obra">Casa M&amp;A</div>
+    </div>
+    <div class="nav-item active" onclick="showPage('pendencias',this)"><span class="nav-dot"></span>Pendências<span class="nav-count urgent" id="cnt-pend">—</span></div>
+    <div class="nav-item" onclick="showPage('frentes',this)"><span class="nav-dot"></span>Frentes de obra<span class="nav-count" id="cnt-frent">—</span></div>
+    <div class="nav-item" onclick="showPage('cobrar',this)"><span class="nav-dot"></span>A cobrar<span class="nav-count" id="cnt-cobr">—</span></div>
+    <div class="sidebar-section">Filtros rápidos</div>
+    <div class="nav-item" onclick="filtrarStatus('Urgente')"><span class="nav-dot" style="background:#C0392B"></span>Urgentes</div>
+    <div class="nav-item" onclick="filtrarStatus('Em andamento')"><span class="nav-dot" style="background:#B7770D"></span>Em andamento</div>
+    <div class="nav-item" onclick="filtrarStatus('Concluído')"><span class="nav-dot" style="background:#2D6A4F"></span>Concluídos</div>
+    <div class="sync-status"><span class="sync-dot" id="sync-dot"></span><span class="sync-text" id="sync-text">conectando...</span></div>
+  </aside>
+
+  <main class="main">
+
+    <div class="page active" id="page-pendencias">
+      <div class="page-header">
+        <div class="page-title">Pendências da obra</div>
+        <div class="page-sub">Edite qualquer célula — salva automaticamente na nuvem.</div>
+      </div>
+      <div class="metrics">
+        <div class="metric-card"><div class="metric-label">Total</div><div class="metric-val" id="m-total">—</div></div>
+        <div class="metric-card"><div class="metric-label">Urgentes</div><div class="metric-val danger" id="m-urg">—</div></div>
+        <div class="metric-card"><div class="metric-label">Em andamento</div><div class="metric-val warn" id="m-and">—</div></div>
+        <div class="metric-card"><div class="metric-label">Concluídos</div><div class="metric-val ok" id="m-conc">—</div></div>
+      </div>
+      <div class="toolbar">
+        <button class="btn-add" onclick="abrirModal('modal-pend')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+          Nova pendência
+        </button>
+        <input class="search-input" type="text" placeholder="Buscar..." oninput="filtrarBusca(this.value)">
+        <select class="filter-select" onchange="filtrarAmb(this.value)">
+          <option value="">Todos os ambientes</option>
+                    <option>Hall de entrada</option>
+          <option>Sala de estar</option>
+          <option>Sala de jantar</option>
+          <option>Cozinha</option>
+          <option>Louçaria</option>
+          <option>Área de serviço</option>
+          <option>Banho de serviço</option>
+          <option>Hall de serviço</option>
+          <option>Despensa / Futuro BWC</option>
+          <option>Depósito</option>
+          <option>Lavabo</option>
+          <option>Escritório</option>
+          <option>Varanda gourmet</option>
+          <option>Garagem</option>
+          <option>Pátio horta</option>
+          <option>Pátio serviço</option>
+          <option>Pátio técnico</option>
+          <option>Escada</option>
+          <option>Circulação térreo</option>
+          <option>Suíte casal</option>
+          <option>Closet casal</option>
+          <option>Banho casal</option>
+          <option>Suíte Cecília</option>
+          <option>Closet Cecília</option>
+          <option>Banho Cecília</option>
+          <option>Suíte Enzo</option>
+          <option>Closet Enzo</option>
+          <option>Banho Enzo</option>
+          <option>Hall superior</option>
+          <option>Circulação superior</option>
+          <option>Maleiro</option>
+          <option>Área técnica</option>
+          <option>Fachada</option>
+          <option>Área externa / jardim</option>
+          <option>Piscina</option>
+          <option>Cobertura / telhado</option>
+          <option>Geral / toda a obra</option>
+        </select>
+        <button class="btn-sec" onclick="carregarTudo()">↺ Atualizar</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th class="col-desc">Descrição</th>
+            <th class="col-amb">Ambiente</th>
+            <th class="col-resp">Responsável</th>
+            <th class="col-status">Status</th>
+            <th class="col-prior">Prior.</th>
+            <th class="col-obs">Observação</th>
+            <th class="col-act">Ação</th>
+          </tr></thead>
+          <tbody id="tbody-pend"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="page" id="page-frentes">
+      <div class="page-header">
+        <div class="page-title">Frentes de obra</div>
+        <div class="page-sub">Arraste o controle para atualizar o avanço. Salva automaticamente.</div>
+      </div>
+      <div class="toolbar">
+        <button class="btn-add" onclick="abrirModal('modal-frente')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+          Nova frente
+        </button>
+        <button class="btn-sec" onclick="carregarTudo()">↺ Atualizar</button>
+      </div>
+      <div class="frente-grid" id="frente-grid"></div>
+    </div>
+
+    <div class="page" id="page-cobrar">
+      <div class="page-header">
+        <div class="page-title">A cobrar / acionar</div>
+        <div class="page-sub">Itens que dependem de resposta de terceiros.</div>
+      </div>
+      <div class="toolbar">
+        <button class="btn-add" onclick="abrirModal('modal-cobrar')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+          Nova cobrança
+        </button>
+        <button class="btn-sec" onclick="carregarTudo()">↺ Atualizar</button>
+      </div>
+      <div id="cobrar-container"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL PENDÊNCIA -->
+<div class="modal-bg" id="modal-pend">
+  <div class="modal">
+    <div class="modal-title">Nova pendência</div>
+    <div class="form-row">
+      <label class="form-label">Descrição</label>
+      <input class="form-input" id="f-desc" type="text" placeholder="Descreva a pendência...">
+    </div>
+    <div class="form-row-2">
+      <div><label class="form-label">Ambiente</label>
+        <select class="form-select" id="f-amb">
+                    <option>Hall de entrada</option>
+          <option>Sala de estar</option>
+          <option>Sala de jantar</option>
+          <option>Cozinha</option>
+          <option>Louçaria</option>
+          <option>Área de serviço</option>
+          <option>Banho de serviço</option>
+          <option>Hall de serviço</option>
+          <option>Despensa / Futuro BWC</option>
+          <option>Depósito</option>
+          <option>Lavabo</option>
+          <option>Escritório</option>
+          <option>Varanda gourmet</option>
+          <option>Garagem</option>
+          <option>Pátio horta</option>
+          <option>Pátio serviço</option>
+          <option>Pátio técnico</option>
+          <option>Escada</option>
+          <option>Circulação térreo</option>
+          <option>Suíte casal</option>
+          <option>Closet casal</option>
+          <option>Banho casal</option>
+          <option>Suíte Cecília</option>
+          <option>Closet Cecília</option>
+          <option>Banho Cecília</option>
+          <option>Suíte Enzo</option>
+          <option>Closet Enzo</option>
+          <option>Banho Enzo</option>
+          <option>Hall superior</option>
+          <option>Circulação superior</option>
+          <option>Maleiro</option>
+          <option>Área técnica</option>
+          <option>Fachada</option>
+          <option>Área externa / jardim</option>
+          <option>Piscina</option>
+          <option>Cobertura / telhado</option>
+          <option>Geral / toda a obra</option>
+        </select>
+      </div>
+      <div><label class="form-label">Responsável</label>
+        <select class="form-select" id="f-resp">
+                    <option>Civil</option>
+          <option>Elétrica</option>
+          <option>Hidráulica</option>
+          <option>Marcenaria</option>
+          <option>Carpintaria</option>
+          <option>Porta</option>
+          <option>Caixilhos</option>
+          <option>Steel</option>
+          <option>ZAIT</option>
+          <option>Arquitetura</option>
+          <option>Fornecedor</option>
+          <option>Cliente</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row-2" style="margin-top:14px">
+      <div><label class="form-label">Status</label>
+        <select class="form-select" id="f-status">
+          <option>Urgente</option><option>Em andamento</option><option>Aguardando</option><option>Não iniciado</option><option>Concluído</option>
+        </select>
+      </div>
+      <div><label class="form-label">Prioridade</label>
+        <select class="form-select" id="f-prior">
+          <option>Alta</option><option>Média</option><option>Baixa</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:14px">
+      <label class="form-label">Observação</label>
+      <textarea class="form-textarea" id="f-obs" placeholder="Detalhe ou contexto..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fecharModal('modal-pend')">Cancelar</button>
+      <button class="btn-save" onclick="salvarPendencia()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FRENTE -->
+<div class="modal-bg" id="modal-frente">
+  <div class="modal">
+    <div class="modal-title">Nova frente de obra</div>
+    <div class="form-row">
+      <label class="form-label">Nome da frente</label>
+      <input class="form-input" id="ff-nome" type="text" placeholder="Ex: Revestimento fachada">
+    </div>
+    <div class="form-row-2">
+      <div><label class="form-label">Status</label>
+        <select class="form-select" id="ff-status">
+          <option>Não iniciado</option><option>Em andamento</option><option>Aguardando</option><option>Bloqueado</option><option>Contratado</option><option>Concluído</option>
+        </select>
+      </div>
+      <div><label class="form-label">Responsável</label>
+        <input class="form-input" id="ff-resp" type="text" placeholder="Quem executa">
+      </div>
+    </div>
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="btn-cancel" onclick="fecharModal('modal-frente')">Cancelar</button>
+      <button class="btn-save" onclick="salvarFrente()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COBRAR -->
+<div class="modal-bg" id="modal-cobrar">
+  <div class="modal">
+    <div class="modal-title">Nova cobrança</div>
+    <div class="form-row">
+      <label class="form-label">Título</label>
+      <input class="form-input" id="fc-titulo" type="text" placeholder="O que precisa ser cobrado...">
+    </div>
+    <div class="form-row-2">
+      <div><label class="form-label">Para quem</label>
+        <select class="form-select" id="fc-para">
+                    <option>Civil</option>
+          <option>Elétrica</option>
+          <option>Hidráulica</option>
+          <option>Marcenaria</option>
+          <option>Carpintaria</option>
+          <option>Porta</option>
+          <option>Caixilhos</option>
+          <option>Steel</option>
+          <option>ZAIT</option>
+          <option>Arquitetura</option>
+          <option>Fornecedor</option>
+          <option>Cliente</option>
+        </select>
+      </div>
+      <div><label class="form-label">Urgência</label>
+        <select class="form-select" id="fc-urg">
+          <option>Urgente</option><option>Esta semana</option><option>Aguardando</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:14px">
+      <label class="form-label">Descrição</label>
+      <textarea class="form-textarea" id="fc-desc" placeholder="Contexto e o que está bloqueando..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fecharModal('modal-cobrar')">Cancelar</button>
+      <button class="btn-save" onclick="salvarCobrar()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API='https://script.google.com/macros/s/AKfycbx_MnRnJIX7ViL0g5KnSjhdI2dKBEW8PeMiKb4x0MyRMg5XKq9AbFPA5cyFp_Ew5QFfNg/exec';
+const HEADERS={pendencias:['id','desc','amb','resp','status','prior','obs'],frentes:['id','nome','status','resp','pct'],cobrar:['id','titulo','para','urg','desc','done']};
+const INICIAL={
+  pendencias:[
+    ['id','desc','amb','resp','status','prior','obs'],
+    [1,'Fechamento do entreforro — contenção do A/C com placa cimentícia','Suíte casal','Arquitetura','Urgente','Alta','Aguarda aprovação ARQ. Bloqueia forro.'],
+    [2,'Rasgo na manta reflexiva do telhado — risco de condensação','Cobertura / telhado','Civil','Urgente','Alta','Identificado nas fotos. Reparar antes de fechar o forro.'],
+    [3,'Passagem dos cabos elétricos e rede antes do fechamento','Suíte casal','Elétrica','Em andamento','Alta','Bloqueia acabamento e forro.'],
+    [4,'Executar mureta da ilha para medição das pedras e soleiras','Varanda gourmet','Civil','Urgente','Alta','Bloqueia marmoraria e definição de soleiras.'],
+    [5,'Cobrar projeto da bancada e ilha junto à marcenaria','Varanda gourmet','Arquitetura','Aguardando','Alta','Bloqueia orçamento da madeira com carpinteiro.'],
+    [6,'Orçar madeira das portas e prateleira com carpinteiro','Varanda gourmet','Carpintaria','Aguardando','Média','Depende do projeto da marcenaria.'],
+    [7,'Impermeabilização antes do teste de pressão dos chuveiros','Banho casal','Hidráulica','Urgente','Alta','Bloqueia teste hidráulico.'],
+    [8,'Selagem do shaft elétrico ao fechar parede','Banho casal','Elétrica','Aguardando','Média','Verificar exigência no projeto elétrico.'],
+    [9,'Hidráulicas enterradas — janela única com saída dos andaimes','Área externa / jardim','Hidráulica','Urgente','Alta','Prioridade máxima. Não tem segunda janela.'],
+    [10,'Revestimento de tijolos na fachada','Fachada','Civil','Não iniciado','Média','Pode iniciar em paralelo.'],
+    [11,'Instalação do petit pavê e caco de Goiás verde','Área externa / jardim','Civil','Aguardando','Média','Aguarda liberação da área externa.'],
+    [12,'Fechar contrato do paisagismo','Área externa / jardim','Fornecedor','Aguardando','Média','Orçamentos em análise. Bloqueia iluminação externa.'],
+    [13,'Orçar iluminação externa do paisagismo','Área externa / jardim','Fornecedor','Aguardando','Média','Depende do fechamento do paisagismo.'],
+    [14,'Relação de módulos elétricos — cotar e comprar','Geral / toda a obra','Elétrica','Em andamento','Baixa','Contagem feita. Partir para cotação.'],
+  ],
+  frentes:[
+    ['id','nome','status','resp','pct'],
+    [1,'Hidráulicas enterradas','Bloqueado','Hidráulica',10],
+    [2,'Passagem de cabos elétricos e rede','Em andamento','Elétrica',40],
+    [3,'Contenção do entreforro — A/C','Aguardando','Civil',5],
+    [4,'Revestimento / plaqueamento interno','Em andamento','Civil',30],
+    [5,'Revestimento fachada — tijolos','Não iniciado','Civil',0],
+    [6,'Impermeabilização banheiros','Não iniciado','Hidráulica',0],
+    [7,'Marcenaria / carpinteiro','Contratado','Marcenaria',15],
+    [8,'Esquadrias e portas','Contratado','Caixilhos',20],
+    [9,'Laje do maleiro + alçapão','Não iniciado','Civil',0],
+    [10,'Paisagismo','Aguardando','Fornecedor',5],
+  ],
+  cobrar:[
+    ['id','titulo','para','urg','desc','done'],
+    [1,'Aprovação da solução do entreforro A/C','Arquitetura','Urgente','Validar fechamento com placa cimentícia. Bloqueia forro.',false],
+    [2,'Projeto da bancada e ilha do gourmet','Arquitetura','Esta semana','Necessário para orçar madeira. Bloqueia marcenaria.',false],
+    [3,'Prazo de entrega — pedras e soleiras','Fornecedor','Aguardando','Confirmar prazo após medição da mureta.',false],
+    [4,'Orçamentos de paisagismo — decisão','Fornecedor','Esta semana','Orçamentos recebidos. Bloqueia iluminação externa.',false],
+    [5,'Início das hidráulicas enterradas','Civil','Urgente','Janela única com saída dos andaimes.',false],
+    [6,'Identificação dos cabos elétricos','Elétrica','Esta semana','Cabos sem identificação no shaft. Antes de fechar paredes.',false],
+  ]
+};
+
+let dados={pendencias:[],frentes:[],cobrar:[]};
+let filtroAtual='',filtroAmbAtual='',filtroStatusAtual='';
+let saveTimeout=null;
+
+function setSyncStatus(s,t){document.getElementById('sync-dot').className='sync-dot '+s;document.getElementById('sync-text').textContent=t}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+
+async function api(aba,method,payload){
+  const p=new URLSearchParams({aba,method});
+  if(payload)p.append('payload',JSON.stringify(payload));
+  const r=await fetch(API+'?'+p.toString());
+  return r.json();
 }
 
-function getOrCreateSheet() {
-  const key = 'SHEET_ID';
-  const props = PropertiesService.getScriptProperties();
-  let id = props.getProperty(key);
-  
-  if (!id) {
-    const ss = SpreadsheetApp.create('Painel de Obra — Z25/07');
-    ['pendencias','frentes','cobrar'].forEach(nome => {
-      ss.insertSheet(nome);
-    });
-    ss.deleteSheet(ss.getSheets()[0]);
-    id = ss.getId();
-    props.setProperty(key, id);
-  }
-  return id;
+function rowsToObjs(rows){
+  if(!rows||rows.length<2)return[];
+  const h=rows[0];
+  return rows.slice(1).map(row=>{const o={};h.forEach((k,i)=>o[k]=row[i]!==undefined?row[i]:'');return o});
+}
+function objsToRows(objs,headers){return[headers,...objs.map(o=>headers.map(h=>o[h]!==undefined?o[h]:''))];}
+
+async function carregarAba(aba){const r=await api(aba,'GET');return r.data&&r.data.length>1?rowsToObjs(r.data):null}
+async function salvarAba(aba,objs){await api(aba,'SET',objsToRows(objs,HEADERS[aba]))}
+
+async function carregarTudo(){
+  setSyncStatus('saving','carregando...');
+  document.getElementById('loading').classList.remove('hidden');
+  try{
+    const [p,f,c]=await Promise.all([carregarAba('pendencias'),carregarAba('frentes'),carregarAba('cobrar')]);
+    if(p)dados.pendencias=p; else{dados.pendencias=rowsToObjs(INICIAL.pendencias);await salvarAba('pendencias',dados.pendencias)}
+    if(f)dados.frentes=f; else{dados.frentes=rowsToObjs(INICIAL.frentes);await salvarAba('frentes',dados.frentes)}
+    if(c)dados.cobrar=c; else{dados.cobrar=rowsToObjs(INICIAL.cobrar);await salvarAba('cobrar',dados.cobrar)}
+    renderTabela();renderFrentes();renderCobrar();atualizarMetricas();
+    setSyncStatus('ok','sincronizado');
+  }catch(e){setSyncStatus('error','erro de conexão');toast('Erro ao carregar.')}
+  document.getElementById('loading').classList.add('hidden');
 }
 
-function json(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
+function agendarSalvamento(aba){
+  setSyncStatus('saving','salvando...');
+  clearTimeout(saveTimeout);
+  saveTimeout=setTimeout(async()=>{
+    try{await salvarAba(aba,dados[aba]);setSyncStatus('ok','sincronizado');toast('Salvo na nuvem')}
+    catch(e){setSyncStatus('error','erro ao salvar');toast('Erro ao salvar.')}
+  },1200);
 }
+
+function atualizarMetricas(){
+  const p=dados.pendencias;
+  document.getElementById('m-total').textContent=p.length;
+  document.getElementById('m-urg').textContent=p.filter(x=>x.status==='Urgente').length;
+  document.getElementById('m-and').textContent=p.filter(x=>x.status==='Em andamento').length;
+  document.getElementById('m-conc').textContent=p.filter(x=>x.status==='Concluído').length;
+  document.getElementById('cnt-pend').textContent=p.filter(x=>x.status!=='Concluído').length;
+  document.getElementById('cnt-frent').textContent=dados.frentes.length;
+  document.getElementById('cnt-cobr').textContent=dados.cobrar.filter(c=>String(c.done)!=='true').length;
+}
+
+function sClass(s){if(s==='Urgente'||s==='Bloqueado')return'badge-danger';if(s==='Em andamento'||s==='Esta semana')return'badge-warn';if(s==='Concluído')return'badge-ok';if(s==='Contratado')return'badge-info';return'badge-neutral'}
+function pClass(p){if(p==='Alta')return'badge-danger';if(p==='Média')return'badge-warn';return'badge-neutral'}
+
+function renderTabela(){
+  const items=dados.pendencias.filter(p=>{
+    const txt=(p.desc+p.amb+p.resp+p.obs).toLowerCase();
+    return(!filtroAtual||txt.includes(filtroAtual.toLowerCase()))&&(!filtroAmbAtual||p.amb===filtroAmbAtual)&&(!filtroStatusAtual||p.status===filtroStatusAtual);
+  });
+  document.getElementById('tbody-pend').innerHTML=items.map(p=>`
+    <tr>
+      <td class="col-desc"><span contenteditable="true" onblur="editPend('${p.id}','desc',this.innerText.trim())">${p.desc}</span></td>
+      <td class="col-amb"><span contenteditable="true" onblur="editPend('${p.id}','amb',this.innerText.trim())">${p.amb}</span></td>
+      <td class="col-resp"><span contenteditable="true" onblur="editPend('${p.id}','resp',this.innerText.trim())">${p.resp}</span></td>
+      <td class="col-status">
+        <select class="status-sel badge ${sClass(p.status)}" onchange="editPend('${p.id}','status',this.value);this.className='status-sel badge '+sClass(this.value)">
+          ${['Urgente','Em andamento','Aguardando','Não iniciado','Concluído'].map(s=>`<option ${s===p.status?'selected':''}>` +s+`</option>`).join('')}
+        </select>
+      </td>
+      <td class="col-prior"><span class="badge ${pClass(p.prior)}">${p.prior}</span></td>
+      <td class="col-obs"><span contenteditable="true" onblur="editPend('${p.id}','obs',this.innerText.trim())" style="color:var(--muted);font-size:12px">${p.obs}</span></td>
+      <td class="col-act"><button class="btn-del" onclick="deletarPend('${p.id}')">Excluir</button></td>
+    </tr>
+  `).join('');
+}
+
+function renderFrentes(){
+  document.getElementById('frente-grid').innerHTML=dados.frentes.map(f=>`
+    <div class="frente-card">
+      <div>
+        <div class="frente-name" contenteditable="true" onblur="editFrente('${f.id}','nome',this.innerText.trim())">${f.nome}</div>
+        <div class="frente-resp" contenteditable="true" onblur="editFrente('${f.id}','resp',this.innerText.trim())">${f.resp}</div>
+      </div>
+      <select class="filter-select badge ${sClass(f.status)}" style="font-size:11px;padding:3px 8px;border-radius:20px;height:auto" onchange="editFrente('${f.id}','status',this.value);this.className='filter-select badge '+sClass(this.value)">
+        ${['Não iniciado','Em andamento','Aguardando','Bloqueado','Contratado','Concluído'].map(s=>`<option ${s===f.status?'selected':''}>` +s+`</option>`).join('')}
+      </select>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="pf-${f.id}" style="width:${f.pct}%"></div></div>
+        <span class="progress-pct" id="pp-${f.id}">${f.pct}%</span>
+      </div>
+      <input type="range" min="0" max="100" step="5" value="${f.pct}" oninput="updatePct('${f.id}',this.value)" onchange="editFrente('${f.id}','pct',this.value)">
+    </div>
+  `).join('');
+}
+
+function renderCobrar(){
+  const grupos={};
+  dados.cobrar.forEach(c=>{if(!grupos[c.para])grupos[c.para]=[];grupos[c.para].push(c)});
+  document.getElementById('cobrar-container').innerHTML=Object.entries(grupos).map(([para,itens])=>`
+    <div class="cobrar-section">
+      <div class="cobrar-section-title">${para}</div>
+      ${itens.map(c=>`
+        <div class="cobrar-card ${String(c.done)==='true'?'done':''}">
+          <div>
+            <div class="cobrar-title" contenteditable="true" onblur="editCobrar('${c.id}','titulo',this.innerText.trim())">${c.titulo}</div>
+            <div class="cobrar-para">Para: ${c.para}</div>
+            <div class="cobrar-desc" contenteditable="true" onblur="editCobrar('${c.id}','desc',this.innerText.trim())">${c.desc}</div>
+          </div>
+          <div class="cobrar-actions">
+            <span class="badge ${sClass(c.urg)}">${c.urg}</span>
+            <button class="btn-done" onclick="toggleCobrar('${c.id}')">${String(c.done)==='true'?'Reabrir':'Marcar feito'}</button>
+            <button class="btn-del" onclick="deletarCobrar('${c.id}')">Excluir</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function editPend(id,campo,val){const p=dados.pendencias.find(x=>String(x.id)===String(id));if(p){p[campo]=val;agendarSalvamento('pendencias');atualizarMetricas()}}
+function editFrente(id,campo,val){const f=dados.frentes.find(x=>String(x.id)===String(id));if(f){f[campo]=val;agendarSalvamento('frentes')}}
+function editCobrar(id,campo,val){const c=dados.cobrar.find(x=>String(x.id)===String(id));if(c){c[campo]=val;agendarSalvamento('cobrar')}}
+function updatePct(id,val){document.getElementById('pf-'+id).style.width=val+'%';document.getElementById('pp-'+id).textContent=val+'%'}
+function toggleCobrar(id){const c=dados.cobrar.find(x=>String(x.id)===String(id));if(c){c.done=String(c.done)!=='true';agendarSalvamento('cobrar');renderCobrar();atualizarMetricas()}}
+
+function deletarPend(id){
+  if(!confirm('Tem certeza que deseja excluir esta pendência?'))return;
+  dados.pendencias=dados.pendencias.filter(x=>String(x.id)!==String(id));
+  agendarSalvamento('pendencias');renderTabela();atualizarMetricas();
+}
+function deletarCobrar(id){
+  if(!confirm('Tem certeza que deseja excluir esta cobrança?'))return;
+  dados.cobrar=dados.cobrar.filter(x=>String(x.id)!==String(id));
+  agendarSalvamento('cobrar');renderCobrar();atualizarMetricas();
+}
+
+function showPage(nome,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+nome).classList.add('active');
+  if(el)el.classList.add('active');
+}
+function filtrarBusca(v){filtroAtual=v;renderTabela()}
+function filtrarAmb(v){filtroAmbAtual=v;renderTabela()}
+function filtrarStatus(v){filtroStatusAtual=filtroStatusAtual===v?'':v;showPage('pendencias',document.querySelectorAll('.nav-item')[0]);renderTabela()}
+function abrirModal(id){document.getElementById(id).classList.add('open')}
+function fecharModal(id){document.getElementById(id).classList.remove('open')}
+function novoId(lista){return lista.length?Math.max(...lista.map(x=>Number(x.id)||0))+1:1}
+
+async function salvarPendencia(){
+  const desc=document.getElementById('f-desc').value.trim();
+  if(!desc)return;
+  dados.pendencias.unshift({id:novoId(dados.pendencias),desc,amb:document.getElementById('f-amb').value,resp:document.getElementById('f-resp').value,status:document.getElementById('f-status').value,prior:document.getElementById('f-prior').value,obs:document.getElementById('f-obs').value.trim()});
+  agendarSalvamento('pendencias');renderTabela();atualizarMetricas();fecharModal('modal-pend');
+  document.getElementById('f-desc').value='';document.getElementById('f-obs').value='';
+}
+async function salvarFrente(){
+  const nome=document.getElementById('ff-nome').value.trim();
+  if(!nome)return;
+  dados.frentes.push({id:novoId(dados.frentes),nome,status:document.getElementById('ff-status').value,resp:document.getElementById('ff-resp').value.trim(),pct:0});
+  agendarSalvamento('frentes');renderFrentes();fecharModal('modal-frente');
+  document.getElementById('ff-nome').value='';document.getElementById('ff-resp').value='';
+}
+async function salvarCobrar(){
+  const titulo=document.getElementById('fc-titulo').value.trim();
+  if(!titulo)return;
+  dados.cobrar.push({id:novoId(dados.cobrar),titulo,para:document.getElementById('fc-para').value,urg:document.getElementById('fc-urg').value,desc:document.getElementById('fc-desc').value.trim(),done:false});
+  agendarSalvamento('cobrar');renderCobrar();atualizarMetricas();fecharModal('modal-cobrar');
+  document.getElementById('fc-titulo').value='';document.getElementById('fc-desc').value='';
+}
+
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
+carregarTudo();
+</script>
+</body>
+</html>
