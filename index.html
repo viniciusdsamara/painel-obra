@@ -941,62 +941,47 @@ function renderFrentes(){
 }
 
 function renderCobrar(){
+  const abertas=dados.cobrar.filter(c=>String(c.done)!=='true');
+  const concluidas=dados.cobrar.filter(c=>String(c.done)==='true');
   const grupos={};
-  dados.cobrar.forEach(c=>{if(!grupos[c.para])grupos[c.para]=[];grupos[c.para].push(c)});
-  document.getElementById('cobrar-container').innerHTML=Object.entries(grupos).map(([para,itens])=>`
+  abertas.forEach(c=>{if(!grupos[c.para])grupos[c.para]=[];grupos[c.para].push(c)});
+  const RESPS=['Civil','Elétrica','Hidráulica','Marcenaria','Carpintaria','Porta','Caixilhos','Steel','ZAIT','Arquitetura','Fornecedor','Cliente'];
+  const mkCard=(c)=>`
+    <div class="cobrar-card ${String(c.done)==='true'?'done':''}">
+      <div>
+        <div class="cobrar-title" contenteditable="true" onblur="editCobrar('${c.id}','titulo',this.innerText.trim())">${c.titulo}</div>
+        <div class="cobrar-para">Para: <select style="border:none;background:transparent;font-family:var(--sans);font-size:12px;color:var(--muted);cursor:pointer" onchange="editCobrar('${c.id}','para',this.value);renderCobrar()">${RESPS.map(r=>'<option '+(r===c.para?'selected':'')+'>'+r+'</option>').join('')}</select></div>
+        <div class="cobrar-desc" contenteditable="true" onblur="editCobrar('${c.id}','desc',this.innerText.trim())">${c.desc}</div>
+      </div>
+      <div class="cobrar-actions">
+        <span class="badge ${sClass(c.urg)}">${c.urg}</span>
+        <button class="btn-done" onclick="toggleCobrar('${c.id}')">${String(c.done)==='true'?'Reabrir':'Marcar feito'}</button>
+        <button class="btn-del" onclick="deletarCobrar('${c.id}')">Excluir</button>
+      </div>
+    </div>`;
+  const gruposHtml=Object.entries(grupos).map(([para,itens])=>`
     <div class="cobrar-section">
       <div class="cobrar-section-title">${para}</div>
-      ${itens.map(c=>`
-        <div class="cobrar-card ${String(c.done)==='true'?'done':''}">
-          <div>
-            <div class="cobrar-title" contenteditable="true" onblur="editCobrar('${c.id}','titulo',this.innerText.trim())">${c.titulo}</div>
-            <div class="cobrar-para">Para: <select style="border:none;background:transparent;font-family:var(--sans);font-size:12px;color:var(--muted);cursor:pointer" onchange="editCobrar('${c.id}','para',this.value);renderCobrar()">${['Civil','Elétrica','Hidráulica','Marcenaria','Carpintaria','Porta','Caixilhos','Steel','ZAIT','Arquitetura','Fornecedor','Cliente'].map(r=>`<option ${r===c.para?'selected':''}>` +r+`</option>`).join('')}</select></div>
-            <div class="cobrar-desc" contenteditable="true" onblur="editCobrar('${c.id}','desc',this.innerText.trim())">${c.desc}</div>
-          </div>
-          <div class="cobrar-actions">
-            <span class="badge ${sClass(c.urg)}">${c.urg}</span>
-            <button class="btn-done" onclick="toggleCobrar('${c.id}')">${String(c.done)==='true'?'Reabrir':'Marcar feito'}</button>
-            <button class="btn-del" onclick="deletarCobrar('${c.id}')">Excluir</button>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `).join('');
+      ${itens.map(c=>mkCard(c)).join('')}
+    </div>`).join('');
+  const concHtml=concluidas.length===0?`<p style="font-size:13px;color:var(--muted);margin-top:24px">Nenhuma cobrança concluída ainda.</p>`:`
+    <div class="cobrar-section" style="margin-top:28px">
+      <div class="cobrar-section-title" onclick="toggleListaConcluidas()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;border-radius:var(--border-radius-md);padding:8px 0">
+        <span>Concluídas — ${concluidas.length} ${concluidas.length===1?'item':'itens'}</span>
+        <span id="icon-conc">▼</span>
+      </div>
+      <div id="lista-conc" style="display:none">${concluidas.map(c=>mkCard(c)).join('')}</div>
+    </div>`;
+  document.getElementById('cobrar-container').innerHTML=gruposHtml+concHtml;
 }
-
-let prazoTimeout=null;
-function salvarPrazo(id,val){
-  const p=dados.pendencias.find(x=>String(x.id)===String(id));
-  if(!p){toast('Erro: pendência não encontrada');return;}
-  p.prazo=val;
-  toast('Salvando prazo...');
-  setSyncStatus('saving','salvando...');
-  clearTimeout(prazoTimeout);
-  prazoTimeout=setTimeout(async()=>{
-    try{
-      const rows=objsToRows(dados.pendencias,HEADERS['pendencias']);
-      await api('pendencias','SET',rows);
-      setSyncStatus('ok','sincronizado');
-      toast('Prazo salvo com sucesso');
-    }catch(e){
-      setSyncStatus('error','erro ao salvar');
-      toast('Erro: '+e.message);
-    }
-  },400);
+function toggleListaConcluidas(){
+  const list=document.getElementById('lista-conc');
+  const icon=document.getElementById('icon-conc');
+  if(!list)return;
+  const open=list.style.display!=='none';
+  list.style.display=open?'none':'block';
+  if(icon)icon.textContent=open?'▼':'▲';
 }
-function editPend(id,campo,val){
-  const p=dados.pendencias.find(x=>String(x.id)===String(id));
-  if(!p)return;
-  p[campo]=val;
-  if(campo==='status'&&val==='Concluído'){p.prior='Zero';}
-  p.alteradoPor=usuarioAtual||'—';
-  agendarSalvamento('pendencias');
-  atualizarMetricas();
-  renderTabela();
-}
-function editFrente(id,campo,val){const f=dados.frentes.find(x=>String(x.id)===String(id));if(f){f[campo]=val;agendarSalvamento('frentes')}}
-function editCobrar(id,campo,val){const c=dados.cobrar.find(x=>String(x.id)===String(id));if(c){c[campo]=val;agendarSalvamento('cobrar')}}
-function updatePct(id,val){document.getElementById('pf-'+id).style.width=val+'%';document.getElementById('pp-'+id).textContent=val+'%'}
 function toggleCobrar(id){const c=dados.cobrar.find(x=>String(x.id)===String(id));if(c){c.done=String(c.done)!=='true';agendarSalvamento('cobrar');renderCobrar();atualizarMetricas()}}
 
 function deletarPend(id){
