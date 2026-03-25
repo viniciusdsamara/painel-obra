@@ -387,8 +387,8 @@
             <th class="col-amb">Ambiente</th>
             <th class="col-resp">Responsável</th>
             <th class="col-status">Status</th>
-            <th class="col-prior"><button class="sort-btn" id="sort-prior" onclick="toggleSort('prior')">Prior.<span class="sort-icon"></span></button></th>
-            <th class="col-prazo"><button class="sort-btn" id="sort-prazo" onclick="toggleSort('prazo')">Prazo<span class="sort-icon"></span></button></th>
+            <th class="col-prior" onclick="toggleSort('prior')" style="cursor:pointer;user-select:none"><span class="sort-btn" id="sort-prior">Prior.<span class="sort-icon"></span></span></th>
+            <th class="col-prazo" onclick="toggleSort('prazo')" style="cursor:pointer;user-select:none"><span class="sort-btn" id="sort-prazo">Prazo<span class="sort-icon"></span></span></th>
             <th class="col-obs">Observação</th>
             <th class="col-act">Ação</th>
           </tr></thead>
@@ -715,7 +715,7 @@ function toggleSort(field){
   if(sortField!==field){sortField=field;sortDir='asc'}
   else if(sortDir==='asc'){sortDir='desc'}
   else{sortField=null;sortDir=null}
-  document.querySelectorAll('.sort-btn').forEach(b=>b.className='sort-btn');
+  document.querySelectorAll('.sort-btn').forEach(b=>{b.className='sort-btn'});
   if(sortField){
     const btn=document.getElementById('sort-'+sortField);
     if(btn)btn.className='sort-btn '+sortDir;
