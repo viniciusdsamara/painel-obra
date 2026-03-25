@@ -847,17 +847,22 @@ function renderCobrar(){
   `).join('');
 }
 
+let prazoTimeout=null;
 function salvarPrazo(id,val){
   const p=dados.pendencias.find(x=>String(x.id)===String(id));
-  if(p){
-    p.prazo=val;
-    setSyncStatus('saving','salvando...');
-    clearTimeout(saveTimeout);
-    saveTimeout=setTimeout(async()=>{
-      try{await salvarAba('pendencias',dados.pendencias);setSyncStatus('ok','sincronizado');toast('Prazo salvo')}
-      catch(e){setSyncStatus('error','erro ao salvar')}
-    },800);
-  }
+  if(!p)return;
+  p.prazo=val;
+  setSyncStatus('saving','salvando...');
+  clearTimeout(prazoTimeout);
+  prazoTimeout=setTimeout(async()=>{
+    try{
+      await salvarAba('pendencias',dados.pendencias);
+      setSyncStatus('ok','sincronizado');
+      toast('Prazo salvo');
+    }catch(e){
+      setSyncStatus('error','erro ao salvar');
+    }
+  },600);
 }
 function editPend(id,campo,val){const p=dados.pendencias.find(x=>String(x.id)===String(id));if(p){p[campo]=val;agendarSalvamento('pendencias');atualizarMetricas()}}
 function editFrente(id,campo,val){const f=dados.frentes.find(x=>String(x.id)===String(id));if(f){f[campo]=val;agendarSalvamento('frentes')}}
