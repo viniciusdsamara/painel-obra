@@ -982,26 +982,52 @@ function sortFrentes(){
   renderFrentes();
 }
 function renderFrentes(){
-  let frentesOrdenadas=[...dados.frentes];
+  const ativas=dados.frentes.filter(f=>f.status!=='Concluído');
+  const concluidas=dados.frentes.filter(f=>f.status==='Concluído');
+
+  let frentesOrdenadas=[...ativas];
   if(frenteSort==='asc')frentesOrdenadas.sort((a,b)=>Number(a.pct)-Number(b.pct));
   else if(frenteSort==='desc')frentesOrdenadas.sort((a,b)=>Number(b.pct)-Number(a.pct));
-  document.getElementById('frente-grid').innerHTML=frentesOrdenadas.map(f=>`
-    <div class="frente-card">
+
+  const mkCard=(f)=>`
+    <div class="frente-card" id="fc-${f.id}">
       <div>
         <div class="frente-name" contenteditable="true" onblur="editFrente('${f.id}','nome',this.innerText.trim())">${f.nome}</div>
         <div class="frente-resp" contenteditable="true" onblur="editFrente('${f.id}','resp',this.innerText.trim())">${f.resp}</div>
       </div>
-      <select class="filter-select badge ${sClass(f.status)}" style="font-size:11px;padding:3px 8px;border-radius:20px;height:auto" onchange="editFrente('${f.id}','status',this.value);this.className='filter-select badge '+sClass(this.value)">
-        ${['Não iniciado','Em andamento','Aguardando','Bloqueado','Contratado','Concluído'].map(s=>`<option ${s===f.status?'selected':''}>` +s+`</option>`).join('')}
+      <select class="filter-select badge ${sClass(f.status)}" style="font-size:11px;padding:3px 8px;border-radius:20px;height:auto" onchange="editFrente('${f.id}','status',this.value);renderFrentes()">
+        ${['Não iniciado','Em andamento','Aguardando','Bloqueado','Contratado','Concluído'].map(s=>`<option ${s===f.status?'selected':''}>`+s+`</option>`).join('')}
       </select>
       <div class="progress-wrap">
         <div class="progress-bar"><div class="progress-fill" id="pf-${f.id}" style="width:${f.pct}%"></div></div>
         <span class="progress-pct" id="pp-${f.id}">${f.pct}%</span>
       </div>
       <input type="range" min="0" max="100" step="5" value="${f.pct}" oninput="updatePct('${f.id}',this.value)" onchange="editFrente('${f.id}','pct',this.value)">
-    </div>
-  `).join('');
+    </div>`;
+
+  const concluidasHtml=concluidas.length===0?'':`
+    <div style="margin-top:24px">
+      <div onclick="toggleFrentesConc()" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);cursor:pointer;font-size:13px;font-weight:500;color:var(--color-text-secondary)">
+        <span>Frentes concluídas — ${concluidas.length} ${concluidas.length===1?'frente':'frentes'}</span>
+        <span id="icon-frentes-conc">▼</span>
+      </div>
+      <div id="lista-frentes-conc" style="display:none;margin-top:8px">
+        <div class="frente-grid">${concluidas.map(f=>mkCard(f)).join('')}</div>
+      </div>
+    </div>`;
+
+  document.getElementById('frente-grid').innerHTML=frentesOrdenadas.map(f=>mkCard(f)).join('')+concluidasHtml;
 }
+
+function toggleFrentesConc(){
+  const list=document.getElementById('lista-frentes-conc');
+  const icon=document.getElementById('icon-frentes-conc');
+  if(!list)return;
+  const open=list.style.display!=='none';
+  list.style.display=open?'none':'block';
+  if(icon)icon.textContent=open?'▼':'▲';
+}
+
 
 function renderCobrar(){
   const abertas=dados.cobrar.filter(c=>String(c.done)!=='true');
