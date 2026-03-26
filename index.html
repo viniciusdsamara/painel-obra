@@ -71,7 +71,7 @@
   td{padding:11px 14px;border-bottom:0.5px solid var(--border);vertical-align:top;font-size:13px}
   tr:last-child td{border-bottom:none}
   tr:hover td{background:#FAFAF8}
-  .col-desc{width:24%}.col-amb{width:12%}.col-resp{width:11%}.col-status{width:10%}.col-prior{width:7%}.col-prazo{width:9%}.col-obs{width:18%}.col-act{width:9%}
+  .col-desc{width:20%}.col-amb{width:10%}.col-resp{width:9%}.col-status{width:9%}.col-prior{width:6%}.col-prazo{width:8%}.col-obs{width:14%}.col-audit{width:11%}.col-act{width:7%}
 
   .badge{display:inline-block;font-size:11px;font-weight:500;font-family:var(--mono);padding:2px 9px;border-radius:20px;white-space:nowrap}
   .badge-danger{background:var(--red-bg);color:var(--red)}
@@ -308,6 +308,10 @@
   .user-name{color:#F5F3EE;font-size:12px}
   .user-troca{color:#9A9890;font-size:11px;cursor:pointer;margin-left:auto;text-decoration:underline}
   .user-troca:hover{color:#F5F3EE}
+
+  .col-audit{width:11%}
+  .audit-info{font-size:10px;color:var(--muted);font-family:var(--mono);line-height:1.6}
+  .audit-name{font-weight:500;color:var(--text);font-size:11px}
 </style>
 </head>
 <body>
@@ -447,7 +451,7 @@
             <th class="col-prior" onclick="toggleSort('prior')" style="cursor:pointer;user-select:none"><span class="sort-btn" id="sort-prior">Prior.<span class="sort-icon"></span></span></th>
             <th class="col-prazo" onclick="toggleSort('prazo')" style="cursor:pointer;user-select:none"><span class="sort-btn" id="sort-prazo">Prazo<span class="sort-icon"></span></span></th>
             <th class="col-obs">Observação</th>
-            <th class="col-act">Ação</th>
+            <th class="col-audit">Histórico</th><th class="col-act">Ação</th>
           </tr></thead>
           <tbody id="tbody-pend"></tbody>
         </table>
@@ -661,7 +665,7 @@ function prazoClass(d){
   return'prazo-ok';
 }
 const API='https://script.google.com/macros/s/AKfycbx_MnRnJIX7ViL0g5KnSjhdI2dKBEW8PeMiKb4x0MyRMg5XKq9AbFPA5cyFp_Ew5QFfNg/exec';
-const HEADERS={pendencias:['id','desc','amb','resp','status','prior','prazo','obs','alteradoPor'],frentes:['id','nome','status','resp','pct'],cobrar:['id','titulo','para','urg','desc','done']};
+const HEADERS={pendencias:['id','desc','amb','resp','status','prior','prazo','obs','alteradoPor','alteradoEm','criadoPor','criadoEm'],frentes:['id','nome','status','resp','pct'],cobrar:['id','titulo','para','urg','desc','done']};
 const INICIAL={
   pendencias:[
     ['id','desc','amb','resp','status','prior','obs'],
@@ -855,6 +859,7 @@ function editPend(id,campo,val){
   p[campo]=val;
   if(campo==='status'&&val==='Concluído'){p.prior='Zero';}
   p.alteradoPor=usuarioAtual||'—';
+  p.alteradoEm=new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
   agendarSalvamento('pendencias');
   atualizarMetricas();
   renderTabela();
@@ -938,12 +943,38 @@ function renderTabela(){
       </td>
       <td class="col-prazo" data-label="Prazo"><input type="date" value="${p.prazo||''}" onchange="salvarPrazo('${p.id}',this.value)" style="border:0.5px solid var(--border);border-radius:6px;padding:2px 4px;font-family:var(--mono);font-size:10px;background:var(--surface);color:var(--text);width:100%;min-width:0"></td>
       <td class="col-obs" data-label="Observação"><span contenteditable="true" onblur="editPend('${p.id}','obs',this.innerText.trim())" style="color:var(--muted);font-size:11px;line-height:1.4">${p.obs}</span></td>
+      <td class="col-audit" data-label="Histórico">
+        <div class="audit-info">
+          ${p.criadoPor?`<div><span style="color:var(--muted);font-size:9px">criado por</span><br><span class="audit-name">${p.criadoPor}</span><br><span style="font-size:9px">${p.criadoEm||''}</span></div>`:''}
+          ${p.alteradoPor&&p.alteradoPor!=='—'?`<div style="margin-top:4px"><span style="color:var(--muted);font-size:9px">alterado por</span><br><span class="audit-name">${p.alteradoPor}</span><br><span style="font-size:9px">${p.alteradoEm||''}</span></div>`:''}
+        </div>
+      </td>
       <td class="col-act"><button class="btn-del" onclick="deletarPend('${p.id}')">Excluir</button></td>
     </tr>
   `).join('');
 }
 
 let frenteSort='desc';
+function editFrente(id,campo,val){
+  const f=dados.frentes.find(x=>String(x.id)===String(id));
+  if(f){f[campo]=val;agendarSalvamento('frentes');}
+}
+
+function updatePct(id,val){
+  document.getElementById('pf-'+id).style.width=val+'%';
+  document.getElementById('pp-'+id).textContent=val+'%';
+  const f=dados.frentes.find(x=>String(x.id)===String(id));
+  if(f){
+    f.pct=parseInt(val);
+    agendarSalvamento('frentes');
+  }
+}
+
+function editCobrar(id,campo,val){
+  const c=dados.cobrar.find(x=>String(x.id)===String(id));
+  if(c){c[campo]=val;agendarSalvamento('cobrar');}
+}
+
 function sortFrentes(){
   if(frenteSort===null){frenteSort='asc';document.getElementById('btn-sort-frentes').textContent='% Crescente ↑';}
   else if(frenteSort==='asc'){frenteSort='desc';document.getElementById('btn-sort-frentes').textContent='% Decrescente ↓';}
@@ -1053,7 +1084,8 @@ function novoId(lista){return lista.length?Math.max(...lista.map(x=>Number(x.id)
 async function salvarPendencia(){
   const desc=document.getElementById('f-desc').value.trim();
   if(!desc)return;
-  dados.pendencias.unshift({id:novoId(dados.pendencias),desc,amb:document.getElementById('f-amb').value,resp:document.getElementById('f-resp').value,status:document.getElementById('f-status').value,prior:document.getElementById('f-prior').value,prazo:document.getElementById('f-prazo').value,obs:document.getElementById('f-obs').value.trim(),alteradoPor:usuarioAtual||'—'});
+  const agora=new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+  dados.pendencias.unshift({id:novoId(dados.pendencias),desc,amb:document.getElementById('f-amb').value,resp:document.getElementById('f-resp').value,status:document.getElementById('f-status').value,prior:document.getElementById('f-prior').value,prazo:document.getElementById('f-prazo').value,obs:document.getElementById('f-obs').value.trim(),alteradoPor:usuarioAtual||'—',alteradoEm:agora,criadoPor:usuarioAtual||'—',criadoEm:agora});
   agendarSalvamento('pendencias');renderTabela();atualizarMetricas();fecharModal('modal-pend');
   document.getElementById('f-desc').value='';document.getElementById('f-prazo').value='';document.getElementById('f-obs').value='';
 }
