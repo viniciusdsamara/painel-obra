@@ -71,7 +71,7 @@
   td{padding:11px 14px;border-bottom:0.5px solid var(--border);vertical-align:top;font-size:13px}
   tr:last-child td{border-bottom:none}
   tr:hover td{background:#FAFAF8}
-  .col-desc{width:20%}.col-amb{width:10%}.col-resp{width:9%}.col-status{width:9%}.col-prior{width:6%}.col-prazo{width:8%}.col-obs{width:14%}.col-audit{width:11%}.col-act{width:7%}
+  .col-desc{width:20%}.col-amb{width:10%;word-break:break-word;white-space:normal}.col-resp{width:9%}.col-status{width:9%}.col-prior{width:6%}.col-prazo{width:8%}.col-obs{width:14%}.col-audit{width:11%}.col-act{width:7%}
 
   .badge{display:inline-block;font-size:11px;font-weight:500;font-family:var(--mono);padding:2px 9px;border-radius:20px;white-space:nowrap}
   .badge-danger{background:var(--red-bg);color:var(--red)}
@@ -722,6 +722,20 @@ async function api(aba,method,payload){
   return r.json();
 }
 
+function normalizarData(val){
+  if(!val||val==='')return'';
+  const s=String(val).trim();
+  // Already formatted DD/MM/YYYY HH:MM
+  if(/^\d{2}\/\d{2}\/\d{4}/.test(s))return s;
+  // ISO format with T
+  if(/^\d{4}-\d{2}-\d{2}T/.test(s)){
+    try{
+      const d=new Date(s);
+      return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    }catch(e){return s;}
+  }
+  return s;
+}
 function normalizePrazo(val){
   if(!val||val==='')return'';
   const s=String(val).trim();
@@ -751,6 +765,7 @@ function rowsToObjs(rows){
     h.forEach((k,i)=>{
       let v=row[i]!==undefined?row[i]:'';
       if(k==='prazo')v=normalizePrazo(v);
+      if((k==='alteradoEm'||k==='criadoEm')&&v)v=normalizarData(v);
       o[k]=v;
     });
     return o;
@@ -806,7 +821,7 @@ function atualizarMetricas(){
   document.getElementById('m-and').textContent=abertas.filter(x=>x.status==='Em andamento').length;
   document.getElementById('m-conc').textContent=p.filter(x=>x.status==='Concluído').length;
   document.getElementById('cnt-pend').textContent=abertas.length;
-  document.getElementById('cnt-frent').textContent=dados.frentes.length;
+  document.getElementById('cnt-frent').textContent=dados.frentes.filter(f=>f.status!=='Concluído').length;
   document.getElementById('cnt-cobr').textContent=dados.cobrar.filter(c=>String(c.done)!=='true').length;
 }
 
@@ -859,7 +874,7 @@ function editPend(id,campo,val){
   p[campo]=val;
   if(campo==='status'&&val==='Concluído'){p.prior='Zero';}
   p.alteradoPor=usuarioAtual||'—';
-  p.alteradoEm=new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const _agora=new Date();p.alteradoEm=_agora.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+_agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   agendarSalvamento('pendencias');
   atualizarMetricas();
   renderTabela();
@@ -945,8 +960,9 @@ function renderTabela(){
       <td class="col-obs" data-label="Observação"><span contenteditable="true" onblur="editPend('${p.id}','obs',this.innerText.trim())" style="color:var(--muted);font-size:11px;line-height:1.4">${p.obs}</span></td>
       <td class="col-audit" data-label="Histórico">
         <div class="audit-info">
-          ${p.criadoPor?`<div><span style="color:var(--muted);font-size:9px">criado por</span><br><span class="audit-name">${p.criadoPor}</span><br><span style="font-size:9px">${p.criadoEm||''}</span></div>`:''}
-          ${p.alteradoPor&&p.alteradoPor!=='—'?`<div style="margin-top:4px"><span style="color:var(--muted);font-size:9px">alterado por</span><br><span class="audit-name">${p.alteradoPor}</span><br><span style="font-size:9px">${p.alteradoEm||''}</span></div>`:''}
+          ${p.criadoPor?`<div style="margin-bottom:5px"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">criado por</div><div class="audit-name">${p.criadoPor}</div><div style="font-size:9px;color:var(--muted)">${p.criadoEm||''}</div></div>`:''}
+          ${p.alteradoPor&&p.alteradoPor!=='—'&&p.alteradoPor!==p.criadoPor?`<div style="padding-top:5px;border-top:0.5px solid var(--border)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">alterado por</div><div class="audit-name">${p.alteradoPor}</div><div style="font-size:9px;color:var(--muted)">${p.alteradoEm||''}</div></div>`:''}
+          ${p.alteradoPor&&p.alteradoPor!=='—'&&p.alteradoPor===p.criadoPor&&p.alteradoEm&&p.alteradoEm!==p.criadoEm?`<div style="padding-top:5px;border-top:0.5px solid var(--border)"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">última edição</div><div style="font-size:9px;color:var(--muted)">${p.alteradoEm}</div></div>`:''}
         </div>
       </td>
       <td class="col-act"><button class="btn-del" onclick="deletarPend('${p.id}')">Excluir</button></td>
