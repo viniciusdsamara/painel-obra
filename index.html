@@ -89,7 +89,7 @@
   .btn-del:hover{background:var(--red);color:white;border-color:var(--red)}
 
   .frente-grid{display:grid;gap:10px}
-  .frente-card{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:16px 20px;display:grid;grid-template-columns:2fr 1fr 1.5fr 100px;align-items:center;gap:16px}
+  .frente-card{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:16px 20px;display:grid;grid-template-columns:2fr 1fr 1.5fr 100px;align-items:center;gap:12px}
   .frente-name{font-size:13px;font-weight:500}
   .frente-resp{font-size:12px;color:var(--muted);margin-top:2px}
   .progress-wrap{display:flex;align-items:center;gap:10px}
@@ -475,7 +475,7 @@
             <th class="col-resp">Responsável</th>
             <th class="col-status" onclick="toggleSort('status')" style="cursor:pointer;user-select:none"><span class="sort-btn" id="sort-status">Status<span class="sort-icon"></span></span></th>
             <th class="col-prior" onclick="toggleSort('prior')" style="cursor:pointer;user-select:none"><span class="sort-btn" id="sort-prior">Prior.<span class="sort-icon"></span></span></th>
-            <th class="col-prazo" onclick="toggleSort('prazo')" style="cursor:pointer;user-select:none"><span class="sort-btn" id="sort-prazo">Prazo<span class="sort-icon"></span></span></th>
+            <th class="col-prazo" onclick="toggleSort('prazo')" style="cursor:pointer;user-select:none"><span class="sort-btn" id="sort-prazo">Data limite<span class="sort-icon"></span></span></th>
             <th class="col-obs">Observação</th>
             <th class="col-audit">Histórico</th><th class="col-act">Ação</th>
           </tr></thead>
@@ -691,7 +691,7 @@ function prazoClass(d){
   return'prazo-ok';
 }
 const API='https://script.google.com/macros/s/AKfycbx_MnRnJIX7ViL0g5KnSjhdI2dKBEW8PeMiKb4x0MyRMg5XKq9AbFPA5cyFp_Ew5QFfNg/exec';
-const HEADERS={pendencias:['id','desc','amb','resp','status','prior','prazo','obs','alteradoPor','alteradoEm','criadoPor','criadoEm'],frentes:['id','nome','status','resp','pct'],cobrar:['id','titulo','para','urg','desc','done']};
+const HEADERS={pendencias:['id','desc','amb','resp','status','prior','prazo','obs','alteradoPor','alteradoEm','criadoPor','criadoEm'],frentes:['id','nome','status','resp','pct','prazo'],cobrar:['id','titulo','para','urg','desc','done']};
 const INICIAL={
   pendencias:[
     ['id','desc','amb','resp','status','prior','obs'],
@@ -712,16 +712,16 @@ const INICIAL={
   ],
   frentes:[
     ['id','nome','status','resp','pct'],
-    [1,'Hidráulicas enterradas','Bloqueado','Hidráulica',10],
-    [2,'Passagem de cabos elétricos e rede','Em andamento','Elétrica',40],
-    [3,'Contenção do entreforro — A/C','Aguardando','Civil',5],
-    [4,'Revestimento / plaqueamento interno','Em andamento','Civil',30],
-    [5,'Revestimento fachada — tijolos','Não iniciado','Civil',0],
-    [6,'Impermeabilização banheiros','Não iniciado','Hidráulica',0],
-    [7,'Marcenaria / carpinteiro','Contratado','Marcenaria',15],
-    [8,'Esquadrias e portas','Contratado','Caixilhos',20],
-    [9,'Laje do maleiro + alçapão','Não iniciado','Civil',0],
-    [10,'Paisagismo','Aguardando','Fornecedor',5],
+    [1,'Hidráulicas enterradas','Bloqueado','Hidráulica',10,''],
+    [2,'Passagem de cabos elétricos e rede','Em andamento','Elétrica',40,''],
+    [3,'Contenção do entreforro — A/C','Aguardando','Civil',5,''],
+    [4,'Revestimento / plaqueamento interno','Em andamento','Civil',30,''],
+    [5,'Revestimento fachada — tijolos','Não iniciado','Civil',0,''],
+    [6,'Impermeabilização banheiros','Não iniciado','Hidráulica',0,''],
+    [7,'Marcenaria / carpinteiro','Contratado','Marcenaria',15,''],
+    [8,'Esquadrias e portas','Contratado','Caixilhos',20,''],
+    [9,'Laje do maleiro + alçapão','Não iniciado','Civil',0,''],
+    [10,'Paisagismo','Aguardando','Fornecedor',5,''],
   ],
   cobrar:[
     ['id','titulo','para','urg','desc','done'],
@@ -1084,6 +1084,22 @@ function renderTabela(){
 }
 
 let frenteSort='desc';
+function salvarPrazoFrente(id,val){
+  const f=dados.frentes.find(x=>String(x.id)===String(id));
+  if(!f)return;
+  f.prazo=val;
+  setSyncStatus('saving','salvando...');
+  clearTimeout(prazoTimeout);
+  prazoTimeout=setTimeout(async()=>{
+    try{
+      const rows=objsToRows(dados.frentes,HEADERS['frentes']);
+      await api('frentes','SET',rows);
+      setSyncStatus('ok','sincronizado');
+      toast('Prazo da frente salvo');
+    }catch(e){setSyncStatus('error','erro ao salvar');}
+  },400);
+}
+
 function editFrente(id,campo,val){
   const f=dados.frentes.find(x=>String(x.id)===String(id));
   if(f){f[campo]=val;agendarSalvamento('frentes');}
@@ -1132,6 +1148,10 @@ function renderFrentes(){
         <span class="progress-pct" id="pp-${f.id}">${f.pct}%</span>
       </div>
       <input type="range" min="0" max="100" step="5" value="${f.pct}" oninput="updatePct('${f.id}',this.value)" onchange="editFrente('${f.id}','pct',this.value)">
+    </div>
+    <div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;padding-top:8px;border-top:0.5px solid var(--border)">
+      <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">Prazo:</span>
+      <input type="date" value="${f.prazo||''}" onchange="salvarPrazoFrente('${f.id}',this.value)" style="border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;font-family:var(--mono);font-size:11px;background:var(--surface);color:var(--text)">
     </div>`;
 
   const concluidasHtml=concluidas.length===0?'':`
@@ -1205,7 +1225,12 @@ function toggleCobrar(id){const c=dados.cobrar.find(x=>String(x.id)===String(id)
 function deletarPend(id){
   if(!confirm('Tem certeza que deseja excluir esta pendência?'))return;
   dados.pendencias=dados.pendencias.filter(x=>String(x.id)!==String(id));
-  agendarSalvamento('pendencias');renderTabela();atualizarMetricas();
+  agendarSalvamento('pendencias');
+  renderTabela();
+  atualizarMetricas();
+  // Remove evento do Calendar
+  const p=new URLSearchParams({aba:'pendencias',method:'DELETE_EVENT',pendId:id});
+  fetch(API+'?'+p.toString()).catch(()=>{});
 }
 function deletarCobrar(id){
   if(!confirm('Tem certeza que deseja excluir esta cobrança?'))return;
