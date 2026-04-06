@@ -956,20 +956,24 @@ function editPend(id,campo,val){
   const _agora=new Date();
   p.alteradoEm=_agora.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+_agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 
-  // Se mudou para Em andamento, cria frente de obra automaticamente
+  // Se mudou para Em andamento, cria frente e remove da lista de pendências
   if(campo==='status'&&val==='Em andamento'){
     const jaExiste=dados.frentes.some(f=>f.nome.trim().toLowerCase()===p.desc.trim().toLowerCase());
     if(!jaExiste){
       const novaFrente={id:novoId(dados.frentes),nome:p.desc,status:'Em andamento',resp:p.resp,pct:0};
       dados.frentes.push(novaFrente);
+      // Remove da lista de pendências
+      dados.pendencias=dados.pendencias.filter(x=>String(x.id)!==String(id));
       agendarSalvamento('frentes');
+      agendarSalvamento('pendencias');
       mostrarUndo(
-        'Frente criada: "'+p.desc.substring(0,30)+(p.desc.length>30?'...':'')+'"',
+        '"'+p.desc.substring(0,35)+(p.desc.length>35?'...':'')+'" virou frente de obra',
         ()=>{
-          // Desfaz: remove a frente criada e volta o status anterior
+          // Desfaz: remove a frente, devolve a pendência
           dados.frentes=dados.frentes.filter(f=>f.id!==novaFrente.id);
           p[campo]=valorAnterior;
           p.prior=priorAnterior;
+          dados.pendencias.unshift(p);
           agendarSalvamento('frentes');
           agendarSalvamento('pendencias');
           renderFrentes();
@@ -977,6 +981,10 @@ function editPend(id,campo,val){
           atualizarMetricas();
         }
       );
+      atualizarMetricas();
+      renderFrentes();
+      renderTabela();
+      return;
     }
   }
 
