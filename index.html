@@ -465,6 +465,7 @@
           <option>Cliente</option>
         </select>
         <button class="btn-sec" onclick="carregarTudo()">↺ Atualizar</button>
+        <button class="btn-sec" onclick="sincCalendar()" id="btn-cal" title="Sincronizar com Google Calendar">📅 Sincronizar Calendar</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -800,6 +801,23 @@ function objsToRows(objs,headers){return[headers,...objs.map(o=>headers.map(h=>o
 
 async function carregarAba(aba){const r=await api(aba,'GET');return r.data&&r.data.length>1?rowsToObjs(r.data):null}
 async function salvarAba(aba,objs){await api(aba,'SET',objsToRows(objs,HEADERS[aba]))}
+
+async function sincCalendar(){
+  const btn=document.getElementById('btn-cal');
+  btn.textContent='⏳ Sincronizando...';
+  btn.disabled=true;
+  try{
+    const p=new URLSearchParams({aba:'pendencias',method:'SYNC_CALENDAR'});
+    const r=await fetch(API+'?'+p.toString());
+    const d=await r.json();
+    if(d.ok){toast('Calendar sincronizado: '+d.result);}
+    else{toast('Erro: '+(d.error||'falha'));}
+  }catch(e){
+    toast('Erro ao sincronizar');
+  }
+  btn.textContent='📅 Sincronizar Calendar';
+  btn.disabled=false;
+}
 
 async function carregarTudo(){
   setSyncStatus('saving','carregando...');
