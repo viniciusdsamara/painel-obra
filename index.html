@@ -420,7 +420,7 @@
 
   <main class="main">
 
-    <div class="page active" id="page-pendencias" style="display:none">
+    <div class="page active" id="page-pendencias">
       <div class="page-header">
         <div class="page-title">Pendências da obra</div>
         <div class="page-sub">Edite qualquer célula — salva automaticamente na nuvem.</div>
@@ -493,7 +493,6 @@
           <option>Cliente</option>
         </select>
         <button class="btn-sec" onclick="carregarTudo()">↺ Atualizar</button>
-        <button class="btn-sec" onclick="sincCalendar()" id="btn-cal" title="Sincronizar com Google Calendar">📅 Sincronizar Calendar</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -570,7 +569,10 @@
           <div class="cal-month-title" id="cal-titulo"></div>
           <button onclick="calNavMes(1)">›</button>
         </div>
-        <button class="btn-sec" onclick="calHoje()">Hoje</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn-sec" onclick="calHoje()">Hoje</button>
+          <button class="btn-sec" onclick="sincCalendar()" id="btn-cal" title="Sincronizar com Google Calendar">📅 Sincronizar</button>
+        </div>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
 
