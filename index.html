@@ -551,6 +551,14 @@
         <div class="page-title">Calendário da obra</div>
         <div class="page-sub">Arraste os eventos para alterar o prazo. Clique em um dia para adicionar pendência.</div>
       </div>
+      <!-- MÉTRICAS ACIMA DO CALENDÁRIO -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
+        <div class="metric-card"><div class="metric-label">Pendências abertas</div><div class="metric-val" id="dash-pend">—</div></div>
+        <div class="metric-card"><div class="metric-label">Urgentes</div><div class="metric-val danger" id="dash-urg">—</div></div>
+        <div class="metric-card"><div class="metric-label">Frentes ativas</div><div class="metric-val warn" id="dash-frent">—</div></div>
+        <div class="metric-card"><div class="metric-label">Concluídos</div><div class="metric-val ok" id="dash-conc">—</div></div>
+      </div>
+
       <div class="cal-legend">
         <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#C0392B"></div>Pendência urgente/aberta</div>
         <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#B7770D"></div>Em andamento / Frente</div>
@@ -566,17 +574,8 @@
       </div>
       <div class="cal-grid" id="cal-grid"></div>
 
-      <!-- DASHBOARD RESUMO -->
+      <!-- LISTAS ABAIXO DO CALENDÁRIO -->
       <div style="margin-top:32px">
-        <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:16px">Resumo da obra</div>
-
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
-          <div class="metric-card"><div class="metric-label">Pendências abertas</div><div class="metric-val" id="dash-pend">—</div></div>
-          <div class="metric-card"><div class="metric-label">Urgentes</div><div class="metric-val danger" id="dash-urg">—</div></div>
-          <div class="metric-card"><div class="metric-label">Frentes ativas</div><div class="metric-val warn" id="dash-frent">—</div></div>
-          <div class="metric-card"><div class="metric-label">Concluídos</div><div class="metric-val ok" id="dash-conc">—</div></div>
-        </div>
-
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
 
           <!-- Próximos prazos -->
@@ -595,6 +594,19 @@
       </div>
     </div>
   </main>
+</div>
+
+
+<!-- MODAL EDITAR EVENTO DO CALENDÁRIO -->
+<div class="modal-bg" id="modal-cal-edit">
+  <div class="modal">
+    <div class="modal-title" id="cal-edit-title">Editar pendência</div>
+    <div id="cal-edit-fields"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fecharModal('modal-cal-edit')">Cancelar</button>
+      <button class="btn-save" onclick="salvarEdicaoCalendario()">Salvar</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL PENDÊNCIA -->
@@ -990,6 +1002,7 @@ function renderCalendario(){
            data-id="${ev.id}"
            data-origem="${ev.origem}"
            ondragstart="calDragStart(event,'${ev.id}','${ev.origem}')"
+           onclick="calClickEvento(event,'${ev.id}','${ev.origem}')"
            title="${ev.titulo}">
         ${ev.titulo.substring(0,25)}${ev.titulo.length>25?'...':''}
       </div>`).join('');
@@ -1014,6 +1027,86 @@ function renderCalendario(){
   }
 
   grid.innerHTML = html;
+}
+
+function calClickEvento(e, id, origem) {
+  e.stopPropagation();
+  const RESPS = ['Civil','Elétrica','Hidráulica','Marcenaria','Carpintaria','Porta','Caixilhos','Steel','ZAIT','Arquitetura','Fornecedor','Cliente'];
+  const AMBS = ['Hall de entrada','Sala de estar','Sala de jantar','Cozinha','Louçaria','Área de serviço','Banho de serviço','Hall de serviço','Despensa / Futuro BWC','Depósito','Lavabo','Escritório','Varanda gourmet','Garagem','Pátio horta','Pátio serviço','Pátio técnico','Escada','Circulação térreo','Suíte casal','Closet casal','Banho casal','Suíte Cecília','Closet Cecília','Banho Cecília','Suíte Enzo','Closet Enzo','Banho Enzo','Hall superior','Circulação superior','Maleiro','Área técnica','Fachada','Área externa / jardim','Piscina','Cobertura / telhado','Geral / toda a obra'];
+
+  if (origem === 'pend') {
+    const p = dados.pendencias.find(x => String(x.id) === String(id));
+    if (!p) return;
+    document.getElementById('cal-edit-title').textContent = 'Editar pendência';
+    document.getElementById('cal-edit-fields').innerHTML = `
+      <div class="form-row"><label class="form-label">Descrição</label><input class="form-input" id="ce-desc" value="${p.desc}"></div>
+      <div class="form-row-2">
+        <div><label class="form-label">Ambiente</label><select class="form-select" id="ce-amb">${AMBS.map(a=>`<option ${a===p.amb?'selected':''}>${a}</option>`).join('')}</select></div>
+        <div><label class="form-label">Responsável</label><select class="form-select" id="ce-resp">${RESPS.map(r=>`<option ${r===p.resp?'selected':''}>${r}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-row-2" style="margin-top:14px">
+        <div><label class="form-label">Status</label><select class="form-select" id="ce-status">${['Urgente','Em andamento','Aguardando','Não iniciado','Concluído'].map(s=>`<option ${s===p.status?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div><label class="form-label">Prazo</label><input class="form-input" id="ce-prazo" type="date" value="${p.prazo||''}"></div>
+      </div>
+      <div class="form-row" style="margin-top:14px"><label class="form-label">Observação</label><textarea class="form-textarea" id="ce-obs">${p.obs||''}</textarea></div>
+      <input type="hidden" id="ce-id" value="${p.id}">
+      <input type="hidden" id="ce-origem" value="pend">
+    `;
+  } else {
+    const f = dados.frentes.find(x => String(x.id) === String(id));
+    if (!f) return;
+    document.getElementById('cal-edit-title').textContent = 'Editar frente de obra';
+    document.getElementById('cal-edit-fields').innerHTML = `
+      <div class="form-row"><label class="form-label">Nome</label><input class="form-input" id="ce-desc" value="${f.nome}"></div>
+      <div class="form-row-2">
+        <div><label class="form-label">Status</label><select class="form-select" id="ce-status">${['Não iniciado','Em andamento','Aguardando','Bloqueado','Contratado','Concluído'].map(s=>`<option ${s===f.status?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div><label class="form-label">Prazo</label><input class="form-input" id="ce-prazo" type="date" value="${f.prazo||''}"></div>
+      </div>
+      <div class="form-row" style="margin-top:14px"><label class="form-label">Responsável</label><input class="form-input" id="ce-resp" value="${f.resp||''}"></div>
+      <input type="hidden" id="ce-id" value="${f.id}">
+      <input type="hidden" id="ce-origem" value="frente">
+    `;
+  }
+  abrirModal('modal-cal-edit');
+}
+
+function salvarEdicaoCalendario() {
+  const id = document.getElementById('ce-id').value;
+  const origem = document.getElementById('ce-origem').value;
+  const prazo = document.getElementById('ce-prazo').value;
+  const status = document.getElementById('ce-status')?.value;
+
+  if (origem === 'pend') {
+    const p = dados.pendencias.find(x => String(x.id) === String(id));
+    if (!p) return;
+    p.desc = document.getElementById('ce-desc').value.trim();
+    p.amb = document.getElementById('ce-amb')?.value || p.amb;
+    p.resp = document.getElementById('ce-resp')?.value || p.resp;
+    p.status = status;
+    p.prazo = prazo;
+    p.obs = document.getElementById('ce-obs')?.value.trim() || '';
+    if (status === 'Concluído') p.prior = 'Zero';
+    p.alteradoPor = usuarioAtual || '—';
+    const agora = new Date();
+    p.alteradoEm = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    agendarSalvamento('pendencias');
+    atualizarMetricas();
+    renderTabela();
+  } else {
+    const f = dados.frentes.find(x => String(x.id) === String(id));
+    if (!f) return;
+    f.nome = document.getElementById('ce-desc').value.trim();
+    f.status = status;
+    f.prazo = prazo;
+    f.resp = document.getElementById('ce-resp')?.value.trim() || f.resp;
+    agendarSalvamento('frentes');
+    renderFrentes();
+  }
+
+  fecharModal('modal-cal-edit');
+  renderCalendario();
+  renderDashboard();
+  toast('Salvo com sucesso');
 }
 
 function calDragStart(e, id, origem) {
