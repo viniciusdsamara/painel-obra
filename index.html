@@ -420,7 +420,7 @@
 
   <main class="main">
 
-    <div class="page active" id="page-pendencias">
+    <div class="page" id="page-pendencias">
       <div class="page-header">
         <div class="page-title">Pendências da obra</div>
         <div class="page-sub">Edite qualquer célula — salva automaticamente na nuvem.</div>
@@ -1648,6 +1648,10 @@ function entrar(nome){
   document.getElementById('user-initial').textContent = nome.charAt(0).toUpperCase();
   document.getElementById('user-name').textContent = nome;
   carregarTudo();
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-calendario').classList.add('active');
+  document.querySelector('[onclick*="showPage('calendario'"]')?.classList.add('active');
 }
 
 function trocarUsuario(){
@@ -1662,6 +1666,11 @@ function iniciar(){
     document.getElementById('user-initial').textContent = usuarioAtual.charAt(0).toUpperCase();
     document.getElementById('user-name').textContent = usuarioAtual;
     carregarTudo();
+    // Garante que calendario é a página inicial
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.getElementById('page-calendario').classList.add('active');
+    document.querySelector('[onclick*="showPage('calendario'"]')?.classList.add('active');
   }
 }
 
