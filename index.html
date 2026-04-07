@@ -332,6 +332,33 @@
   .undo-btn{background:rgba(255,255,255,0.15);border:none;color:#F5F3EE;padding:4px 12px;border-radius:6px;font-family:var(--mono);font-size:12px;cursor:pointer;transition:background 0.15s}
   .undo-btn:hover{background:rgba(255,255,255,0.25)}
   .undo-progress{position:absolute;bottom:0;left:0;height:2px;background:rgba(255,255,255,0.3);border-radius:0 0 10px 10px;transition:width linear}
+
+  .cal-wrap{padding:0}
+  .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .cal-nav{display:flex;align-items:center;gap:12px}
+  .cal-nav button{background:none;border:0.5px solid var(--border);border-radius:8px;padding:6px 14px;font-family:var(--sans);font-size:13px;cursor:pointer;color:var(--text);transition:background 0.15s}
+  .cal-nav button:hover{background:var(--surface)}
+  .cal-month-title{font-size:18px;font-weight:600;color:var(--text);min-width:180px;text-align:center}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border:0.5px solid var(--border);border-radius:12px;overflow:hidden}
+  .cal-day-header{background:#F9F8F5;text-align:center;padding:8px 0;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted)}
+  .cal-day{background:var(--surface);min-height:100px;padding:6px;position:relative;vertical-align:top;cursor:pointer;transition:background 0.1s}
+  .cal-day:hover{background:#FAFAF8}
+  .cal-day.other-month{background:#FAFAF8;opacity:0.5}
+  .cal-day.today .cal-day-num{background:var(--text);color:#F5F3EE;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
+  .cal-day-num{font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
+  .cal-event{font-size:10px;padding:2px 6px;border-radius:4px;margin-bottom:2px;cursor:grab;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:none;line-height:1.4}
+  .cal-event:active{cursor:grabbing;opacity:0.7}
+  .cal-event.tipo-pend{background:#FDF0EE;color:#A32D2D;border-left:2px solid #C0392B}
+  .cal-event.tipo-pend.em-andamento{background:#FDF6E3;color:#633806;border-left:2px solid #B7770D}
+  .cal-event.tipo-frente{background:#FDF6E3;color:#633806;border-left:2px solid #B7770D}
+  .cal-event.tipo-conc{background:#F1EFE8;color:#5F5E5A;border-left:2px solid #B4B2A9}
+  .cal-day.drag-over{background:#EAF2FA !important;outline:2px dashed #378ADD}
+  .cal-legend{display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+  .cal-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+  .cal-legend-dot{width:10px;height:10px;border-radius:2px}
+  .cal-view-toggle{display:flex;gap:6px}
+  .cal-view-btn{background:none;border:0.5px solid var(--border);border-radius:6px;padding:4px 12px;font-size:12px;font-family:var(--sans);cursor:pointer;color:var(--muted)}
+  .cal-view-btn.active{background:var(--text);color:#F5F3EE;border-color:var(--text)}
 </style>
 </head>
 <body>
@@ -374,7 +401,8 @@
       <div class="sidebar-obra">Casa M&amp;A</div>
     </div>
     <div class="sidebar-nav-group">
-    <div class="nav-item active" onclick="showPage('pendencias',this)"><span class="nav-dot"></span>Pendências<span class="nav-count urgent" id="cnt-pend">—</span></div>
+    <div class="nav-item active" onclick="showPage('calendario',this)"><span class="nav-dot"></span>Calendário</div>
+    <div class="nav-item" onclick="showPage('pendencias',this)"><span class="nav-dot"></span>Pendências<span class="nav-count urgent" id="cnt-pend">—</span></div>
     <div class="nav-item" onclick="showPage('frentes',this)"><span class="nav-dot"></span>Frentes de obra<span class="nav-count" id="cnt-frent">—</span></div>
     <div class="nav-item" onclick="showPage('cobrar',this)"><span class="nav-dot"></span>A cobrar<span class="nav-count" id="cnt-cobr">—</span></div>
     <div class="sidebar-section sidebar-section-filters">Filtros rápidos</div>
@@ -392,7 +420,7 @@
 
   <main class="main">
 
-    <div class="page active" id="page-pendencias">
+    <div class="page active" id="page-pendencias" style="display:none">
       <div class="page-header">
         <div class="page-title">Pendências da obra</div>
         <div class="page-sub">Edite qualquer célula — salva automaticamente na nuvem.</div>
@@ -516,6 +544,56 @@
       <div id="cobrar-container"></div>
     </div>
 
+
+    <!-- CALENDÁRIO -->
+    <div class="page active" id="page-calendario">
+      <div class="page-header">
+        <div class="page-title">Calendário da obra</div>
+        <div class="page-sub">Arraste os eventos para alterar o prazo. Clique em um dia para adicionar pendência.</div>
+      </div>
+      <div class="cal-legend">
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#C0392B"></div>Pendência urgente/aberta</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#B7770D"></div>Em andamento / Frente</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#B4B2A9"></div>Concluído</div>
+      </div>
+      <div class="cal-header">
+        <div class="cal-nav">
+          <button onclick="calNavMes(-1)">‹</button>
+          <div class="cal-month-title" id="cal-titulo"></div>
+          <button onclick="calNavMes(1)">›</button>
+        </div>
+        <button class="btn-sec" onclick="calHoje()">Hoje</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+
+      <!-- DASHBOARD RESUMO -->
+      <div style="margin-top:32px">
+        <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:16px">Resumo da obra</div>
+
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
+          <div class="metric-card"><div class="metric-label">Pendências abertas</div><div class="metric-val" id="dash-pend">—</div></div>
+          <div class="metric-card"><div class="metric-label">Urgentes</div><div class="metric-val danger" id="dash-urg">—</div></div>
+          <div class="metric-card"><div class="metric-label">Frentes ativas</div><div class="metric-val warn" id="dash-frent">—</div></div>
+          <div class="metric-card"><div class="metric-label">Concluídos</div><div class="metric-val ok" id="dash-conc">—</div></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+          <!-- Próximos prazos -->
+          <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:12px;overflow:hidden">
+            <div style="padding:14px 18px;border-bottom:0.5px solid var(--border);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted)">Próximos prazos</div>
+            <div id="dash-proximos" style="padding:8px 0"></div>
+          </div>
+
+          <!-- Pendências urgentes -->
+          <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:12px;overflow:hidden">
+            <div style="padding:14px 18px;border-bottom:0.5px solid var(--border);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted)">Urgentes</div>
+            <div id="dash-urgentes" style="padding:8px 0"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -802,6 +880,186 @@ function objsToRows(objs,headers){return[headers,...objs.map(o=>headers.map(h=>o
 async function carregarAba(aba){const r=await api(aba,'GET');return r.data&&r.data.length>1?rowsToObjs(r.data):null}
 async function salvarAba(aba,objs){await api(aba,'SET',objsToRows(objs,HEADERS[aba]))}
 
+
+let calAno = new Date().getFullYear();
+let calMes = new Date().getMonth();
+let dragItem = null;
+let dragTipo = null;
+
+const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS_SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function calHoje(){ calAno=new Date().getFullYear(); calMes=new Date().getMonth(); renderCalendario(); }
+function calNavMes(dir){ calMes+=dir; if(calMes>11){calMes=0;calAno++;}else if(calMes<0){calMes=11;calAno--;} renderCalendario(); }
+
+function renderDashboard(){
+  const abertas = dados.pendencias.filter(p => p.status !== 'Concluído');
+  const urgentes = abertas.filter(p => p.status === 'Urgente');
+  const frentesAtivas = dados.frentes.filter(f => f.status !== 'Concluído');
+  const concluidos = dados.pendencias.filter(p => p.status === 'Concluído').length;
+
+  document.getElementById('dash-pend').textContent = abertas.length;
+  document.getElementById('dash-urg').textContent = urgentes.length;
+  document.getElementById('dash-frent').textContent = frentesAtivas.length;
+  document.getElementById('dash-conc').textContent = concluidos;
+
+  // Próximos prazos (ordenados)
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const comPrazo = [...dados.pendencias, ...dados.frentes.map(f=>({...f,desc:f.nome}))]
+    .filter(p => p.prazo && p.status !== 'Concluído')
+    .map(p => ({...p, prazoDate: new Date(normalizePrazo(p.prazo)+'T00:00:00')}))
+    .filter(p => !isNaN(p.prazoDate))
+    .sort((a,b) => a.prazoDate - b.prazoDate)
+    .slice(0, 6);
+
+  const fmtData = d => {
+    const diff = Math.round((d - hoje) / (1000*60*60*24));
+    if (diff < 0) return `<span style="color:var(--red);font-size:10px">${Math.abs(diff)}d atraso</span>`;
+    if (diff === 0) return `<span style="color:var(--amber);font-size:10px">hoje</span>`;
+    return `<span style="font-size:10px;color:var(--muted)">${diff}d</span>`;
+  };
+
+  document.getElementById('dash-proximos').innerHTML = comPrazo.length === 0
+    ? '<div style="padding:12px 18px;font-size:13px;color:var(--muted)">Nenhum prazo definido</div>'
+    : comPrazo.map(p => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 18px;border-bottom:0.5px solid var(--border)" onclick="showPage('pendencias',document.querySelectorAll('.nav-item')[1])" style="cursor:pointer">
+          <div>
+            <div style="font-size:12px;font-weight:500;color:var(--text)">${(p.desc||p.nome||'').substring(0,40)}</div>
+            <div style="font-size:11px;color:var(--muted)">${p.amb||p.resp||''}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;margin-left:8px">${fmtData(p.prazoDate)}</div>
+        </div>`).join('');
+
+  // Urgentes
+  document.getElementById('dash-urgentes').innerHTML = urgentes.length === 0
+    ? '<div style="padding:12px 18px;font-size:13px;color:var(--muted)">Nenhuma pendência urgente</div>'
+    : urgentes.slice(0,6).map(p => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 18px;border-bottom:0.5px solid var(--border)">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
+          <div>
+            <div style="font-size:12px;font-weight:500;color:var(--text)">${p.desc.substring(0,40)}</div>
+            <div style="font-size:11px;color:var(--muted)">${p.amb} — ${p.resp}</div>
+          </div>
+        </div>`).join('');
+}
+
+function renderCalendario(){
+  document.getElementById('cal-titulo').textContent = MESES[calMes] + ' ' + calAno;
+  const grid = document.getElementById('cal-grid');
+
+  // Headers
+  let html = DIAS_SEMANA.map(d=>`<div class="cal-day-header">${d}</div>`).join('');
+
+  const primeiroDia = new Date(calAno, calMes, 1).getDay();
+  const diasNoMes = new Date(calAno, calMes+1, 0).getDate();
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+
+  // Coleta todos os eventos do mês
+  const eventos = [];
+  dados.pendencias.forEach(p => {
+    if (!p.prazo) return;
+    const d = normalizePrazo(p.prazo);
+    if (!d) return;
+    eventos.push({ id: p.id, titulo: p.desc, data: d, tipo: p.status==='Concluído'?'conc':(p.status==='Em andamento'?'em-andamento':'pend'), origem: 'pend' });
+  });
+  dados.frentes.forEach(f => {
+    if (!f.prazo) return;
+    const d = normalizePrazo(f.prazo);
+    if (!d) return;
+    eventos.push({ id: f.id, titulo: f.nome, data: d, tipo: f.status==='Concluído'?'conc':'frente', origem: 'frente' });
+  });
+
+  // Dias do mês anterior
+  const diasAntes = primeiroDia;
+  const diasMesAnterior = new Date(calAno, calMes, 0).getDate();
+  for (let i = diasAntes-1; i >= 0; i--) {
+    const dia = diasMesAnterior - i;
+    html += `<div class="cal-day other-month"><div class="cal-day-num">${dia}</div></div>`;
+  }
+
+  // Dias do mês atual
+  for (let dia = 1; dia <= diasNoMes; dia++) {
+    const dataStr = calAno + '-' + String(calMes+1).padStart(2,'0') + '-' + String(dia).padStart(2,'0');
+    const diaDate = new Date(calAno, calMes, dia);
+    const isHoje = diaDate.getTime() === hoje.getTime();
+    const evsDia = eventos.filter(e => e.data === dataStr);
+
+    const evHtml = evsDia.map(ev => `
+      <div class="cal-event tipo-${ev.tipo}"
+           draggable="true"
+           data-id="${ev.id}"
+           data-origem="${ev.origem}"
+           ondragstart="calDragStart(event,'${ev.id}','${ev.origem}')"
+           title="${ev.titulo}">
+        ${ev.titulo.substring(0,25)}${ev.titulo.length>25?'...':''}
+      </div>`).join('');
+
+    html += `
+      <div class="cal-day${isHoje?' today':''}"
+           data-data="${dataStr}"
+           ondragover="calDragOver(event)"
+           ondragleave="calDragLeave(event)"
+           ondrop="calDrop(event,'${dataStr}')"
+           onclick="calClickDia('${dataStr}',event)">
+        <div class="cal-day-num">${dia}</div>
+        ${evHtml}
+      </div>`;
+  }
+
+  // Dias do próximo mês
+  const totalCelulas = diasAntes + diasNoMes;
+  const restante = totalCelulas % 7 === 0 ? 0 : 7 - (totalCelulas % 7);
+  for (let i = 1; i <= restante; i++) {
+    html += `<div class="cal-day other-month"><div class="cal-day-num">${i}</div></div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function calDragStart(e, id, origem) {
+  dragItem = id;
+  dragTipo = origem;
+  e.dataTransfer.effectAllowed = 'move';
+  e.stopPropagation();
+}
+
+function calDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+
+function calDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function calDrop(e, novaData) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (!dragItem) return;
+
+  if (dragTipo === 'pend') {
+    salvarPrazo(dragItem, novaData);
+    const p = dados.pendencias.find(x => String(x.id) === String(dragItem));
+    if (p) { p.prazo = novaData; }
+  } else if (dragTipo === 'frente') {
+    salvarPrazoFrente(dragItem, novaData);
+    const f = dados.frentes.find(x => String(x.id) === String(dragItem));
+    if (f) { f.prazo = novaData; }
+  }
+
+  dragItem = null;
+  dragTipo = null;
+  renderCalendario();
+  toast('Prazo atualizado');
+}
+
+function calClickDia(data, e) {
+  if (e.target.classList.contains('cal-event')) return;
+  // Preenche a data no modal de nova pendência e abre
+  document.getElementById('f-prazo').value = data;
+  abrirModal('modal-pend');
+}
+
 async function sincCalendar(){
   const btn=document.getElementById('btn-cal');
   btn.textContent='⏳ Sincronizando...';
@@ -841,7 +1099,7 @@ async function carregarTudo(){
     } else{dados.pendencias=rowsToObjs(INICIAL.pendencias);await salvarAba('pendencias',dados.pendencias)}
     if(f)dados.frentes=f; else{dados.frentes=rowsToObjs(INICIAL.frentes);await salvarAba('frentes',dados.frentes)}
     if(c)dados.cobrar=c; else{dados.cobrar=rowsToObjs(INICIAL.cobrar);await salvarAba('cobrar',dados.cobrar)}
-    renderTabela();renderFrentes();renderCobrar();atualizarMetricas();
+    renderTabela();renderFrentes();renderCobrar();atualizarMetricas();renderCalendario();renderDashboard();
     setSyncStatus('ok','sincronizado');
   }catch(e){setSyncStatus('error','erro de conexão');toast('Erro ao carregar.')}
   document.getElementById('loading').classList.add('hidden');
@@ -1243,6 +1501,7 @@ function showPage(nome,el){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+nome).classList.add('active');
   if(el)el.classList.add('active');
+  if(nome==='calendario'){renderCalendario();renderDashboard();}
 }
 function filtrarStatusMobile(v){
   filtroStatusAtual=filtroStatusAtual===v?'':v;
