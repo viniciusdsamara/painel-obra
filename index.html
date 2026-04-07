@@ -1647,11 +1647,8 @@ function entrar(nome){
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('user-initial').textContent = nome.charAt(0).toUpperCase();
   document.getElementById('user-name').textContent = nome;
+  irParaCalendario();
   carregarTudo();
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-calendario').classList.add('active');
-  document.querySelector('[onclick*="showPage('calendario'"]')?.classList.add('active');
 }
 
 function trocarUsuario(){
@@ -1660,17 +1657,25 @@ function trocarUsuario(){
   document.getElementById('login-screen').classList.remove('hidden');
 }
 
+function irParaCalendario(){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-calendario').classList.add('active');
+  // Mark calendario nav item as active
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if(n.getAttribute('onclick') && n.getAttribute('onclick').includes('calendario')) {
+      n.classList.add('active');
+    }
+  });
+}
+
 function iniciar(){
   if(usuarioAtual){
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('user-initial').textContent = usuarioAtual.charAt(0).toUpperCase();
     document.getElementById('user-name').textContent = usuarioAtual;
+    irParaCalendario();
     carregarTudo();
-    // Garante que calendario é a página inicial
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-    document.getElementById('page-calendario').classList.add('active');
-    document.querySelector('[onclick*="showPage('calendario'"]')?.classList.add('active');
   }
 }
 
