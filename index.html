@@ -71,7 +71,7 @@
   td{padding:11px 14px;border-bottom:0.5px solid var(--border);vertical-align:top;font-size:13px}
   tr:last-child td{border-bottom:none}
   tr:hover td{background:#FAFAF8}
-  .col-desc{width:20%}.col-amb{width:12%;white-space:normal;word-break:break-word;min-width:80px}.col-resp{width:9%}.col-status{width:9%}.col-prior{width:6%}.col-prazo{width:8%}.col-obs{width:14%}.col-audit{width:11%}.col-act{width:7%}
+  .col-desc{width:17%}.col-amb{width:11%;white-space:normal;word-break:break-word;min-width:80px}.col-resp{width:13%;white-space:normal;word-break:break-word}.col-status{width:9%}.col-prior{width:6%}.col-prazo{width:8%}.col-obs{width:14%}.col-audit{width:11%}.col-act{width:7%}
 
   .badge{display:inline-block;font-size:11px;font-weight:500;font-family:var(--mono);padding:2px 9px;border-radius:20px;white-space:nowrap}
   .badge-danger{background:var(--red-bg);color:var(--red)}
@@ -1440,6 +1440,7 @@ function renderTabela(){
 }
 
 let frenteSort='desc';
+let frenteSortPrazo=null;
 function salvarPrazoFrente(id,val){
   const f=dados.frentes.find(x=>String(x.id)===String(id));
   if(!f)return;
@@ -1477,9 +1478,20 @@ function editCobrar(id,campo,val){
 }
 
 function sortFrentes(){
+  frenteSortPrazo=null;
+  document.getElementById('btn-sort-prazo-frentes').textContent='Prazo ↕';
   if(frenteSort===null){frenteSort='asc';document.getElementById('btn-sort-frentes').textContent='% Crescente ↑';}
   else if(frenteSort==='asc'){frenteSort='desc';document.getElementById('btn-sort-frentes').textContent='% Decrescente ↓';}
   else if(frenteSort==='desc'){frenteSort='asc';document.getElementById('btn-sort-frentes').textContent='% Crescente ↑';}
+  renderFrentes();
+}
+
+function sortFrentesPrazo(){
+  frenteSort=null;
+  document.getElementById('btn-sort-frentes').textContent='% Decrescente ↓';
+  if(frenteSortPrazo===null){frenteSortPrazo='asc';document.getElementById('btn-sort-prazo-frentes').textContent='Prazo ↑';}
+  else if(frenteSortPrazo==='asc'){frenteSortPrazo='desc';document.getElementById('btn-sort-prazo-frentes').textContent='Prazo ↓';}
+  else{frenteSortPrazo=null;document.getElementById('btn-sort-prazo-frentes').textContent='Prazo ↕';}
   renderFrentes();
 }
 function renderFrentes(){
@@ -1489,6 +1501,8 @@ function renderFrentes(){
   let frentesOrdenadas=[...ativas];
   if(frenteSort==='asc')frentesOrdenadas.sort((a,b)=>Number(a.pct)-Number(b.pct));
   else if(frenteSort==='desc')frentesOrdenadas.sort((a,b)=>Number(b.pct)-Number(a.pct));
+  else if(frenteSortPrazo==='asc')frentesOrdenadas.sort((a,b)=>(a.prazo||'9999-99-99').localeCompare(b.prazo||'9999-99-99'));
+  else if(frenteSortPrazo==='desc')frentesOrdenadas.sort((a,b)=>(b.prazo||'9999-99-99').localeCompare(a.prazo||'9999-99-99'));
 
   const mkCard=(f)=>`
     <div class="frente-card" id="fc-${f.id}">
