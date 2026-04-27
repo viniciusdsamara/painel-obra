@@ -1494,7 +1494,14 @@ function renderFrentes(){
     <div class="frente-card" id="fc-${f.id}">
       <div>
         <div class="frente-name" contenteditable="true" onblur="editFrente('${f.id}','nome',this.innerText.trim())">${f.nome}</div>
-        <div class="frente-resp" contenteditable="true" onblur="editFrente('${f.id}','resp',this.innerText.trim())">${f.resp}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
+          <div class="frente-resp" contenteditable="true" onblur="editFrente('${f.id}','resp',this.innerText.trim())" style="flex-shrink:0">${f.resp}</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);font-family:var(--mono)">
+            <span>·</span>
+            <span>Prazo:</span>
+            <input type="date" value="${f.prazo||''}" onchange="salvarPrazoFrente('${f.id}',this.value)" style="border:0.5px solid var(--border);border-radius:6px;padding:2px 6px;font-family:var(--mono);font-size:11px;background:var(--surface);color:var(--text)">
+          </div>
+        </div>
       </div>
       <select class="filter-select badge ${sClass(f.status)}" style="font-size:11px;padding:3px 8px;border-radius:20px;height:auto" onchange="editFrente('${f.id}','status',this.value);renderFrentes()">
         ${['Não iniciado','Em andamento','Aguardando','Bloqueado','Contratado','Concluído'].map(s=>`<option ${s===f.status?'selected':''}>`+s+`</option>`).join('')}
@@ -1504,10 +1511,6 @@ function renderFrentes(){
         <span class="progress-pct" id="pp-${f.id}">${f.pct}%</span>
       </div>
       <input type="range" min="0" max="100" step="5" value="${f.pct}" oninput="updatePct('${f.id}',this.value)" onchange="editFrente('${f.id}','pct',this.value)">
-    </div>
-    <div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;padding-top:8px;border-top:0.5px solid var(--border)">
-      <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">Prazo:</span>
-      <input type="date" value="${f.prazo||''}" onchange="salvarPrazoFrente('${f.id}',this.value)" style="border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;font-family:var(--mono);font-size:11px;background:var(--surface);color:var(--text)">
     </div>`;
 
   const concluidasHtml=concluidas.length===0?'':`
