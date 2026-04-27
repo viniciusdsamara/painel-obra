@@ -484,6 +484,7 @@
           <option>Hidráulica</option>
           <option>Marcenaria</option>
           <option>Carpintaria</option>
+          <option>Acabamentos</option>
           <option>Porta</option>
           <option>Caixilhos</option>
           <option>Steel</option>
@@ -668,6 +669,7 @@
           <option>Hidráulica</option>
           <option>Marcenaria</option>
           <option>Carpintaria</option>
+          <option>Acabamentos</option>
           <option>Porta</option>
           <option>Caixilhos</option>
           <option>Steel</option>
@@ -746,6 +748,7 @@
           <option>Hidráulica</option>
           <option>Marcenaria</option>
           <option>Carpintaria</option>
+          <option>Acabamentos</option>
           <option>Porta</option>
           <option>Caixilhos</option>
           <option>Steel</option>
@@ -1033,7 +1036,7 @@ function renderCalendario(){
 
 function calClickEvento(e, id, origem) {
   e.stopPropagation();
-  const RESPS = ['Civil','Elétrica','Hidráulica','Marcenaria','Carpintaria','Porta','Caixilhos','Steel','ZAIT','Arquitetura','Fornecedor','Cliente'];
+  const RESPS = ['Civil','Elétrica','Hidráulica','Marcenaria','Carpintaria','Acabamentos','Porta','Caixilhos','Steel','ZAIT','Arquitetura','Fornecedor','Cliente'];
   const AMBS = ['Hall de entrada','Sala de estar','Sala de jantar','Cozinha','Louçaria','Área de serviço','Banho de serviço','Hall de serviço','Despensa / Futuro BWC','Depósito','Lavabo','Escritório','Varanda gourmet','Garagem','Pátio horta','Pátio serviço','Pátio técnico','Escada','Circulação térreo','Suíte casal','Closet casal','Banho casal','Suíte Cecília','Closet Cecília','Banho Cecília','Suíte Enzo','Closet Enzo','Banho Enzo','Hall superior','Circulação superior','Maleiro','Área técnica','Fachada','Área externa / jardim','Piscina','Cobertura / telhado','Geral / toda a obra'];
 
   if (origem === 'pend') {
@@ -1409,7 +1412,7 @@ function renderTabela(){
       </td>
       <td class="col-resp" data-label="Responsável">
         <select class="status-sel" style="border:none;font-size:12px;color:var(--text);cursor:pointer;width:100%;font-family:var(--sans);background:transparent" onchange="editPend('${p.id}','resp',this.value)">
-          ${['Civil','Elétrica','Hidráulica','Marcenaria','Carpintaria','Porta','Caixilhos','Steel','ZAIT','Arquitetura','Fornecedor','Cliente'].map(r=>`<option ${r===p.resp?'selected':''}>` +r+`</option>`).join('')}
+          ${['Civil','Elétrica','Hidráulica','Marcenaria','Carpintaria','Acabamentos','Porta','Caixilhos','Steel','ZAIT','Arquitetura','Fornecedor','Cliente'].map(r=>`<option ${r===p.resp?'selected':''}>` +r+`</option>`).join('')}
         </select>
       </td>
       <td class="col-status" data-label="Status">
@@ -1536,7 +1539,7 @@ function renderCobrar(){
   const concluidas=dados.cobrar.filter(c=>String(c.done)==='true');
   const grupos={};
   abertas.forEach(c=>{if(!grupos[c.para])grupos[c.para]=[];grupos[c.para].push(c)});
-  const RESPS=['Civil','Elétrica','Hidráulica','Marcenaria','Carpintaria','Porta','Caixilhos','Steel','ZAIT','Arquitetura','Fornecedor','Cliente'];
+  const RESPS=['Civil','Elétrica','Hidráulica','Marcenaria','Carpintaria','Acabamentos','Porta','Caixilhos','Steel','ZAIT','Arquitetura','Fornecedor','Cliente'];
   const mkCard=(c)=>`
     <div class="cobrar-card ${String(c.done)==='true'?'done':''}">
       <div>
